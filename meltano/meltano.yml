@@ -1,0 +1,22 @@
+version: 1
+send_anonymous_usage_stats: true
+project_id: 315567d7-95e5-463a-aeb1-343fa09e2e5c
+plugins:
+  extractors:
+  - name: tap-csv
+    variant: meltano
+    pip_url: git+https://gitlab.com/meltano/tap-csv.git
+    config:
+      files:
+      - entity: sample
+        file: extract/sample.csv
+        keys:
+        - id
+    select:
+    - sample.id
+  loaders:
+  - name: target-jsonl
+    variant: andyh1203
+    pip_url: target-jsonl
+    config:
+      destination_path: load
