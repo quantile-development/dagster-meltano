@@ -1,10 +1,10 @@
 from types import FunctionType
-from typing import Generator
+from typing import Any, Generator, List
 from dagster import (
     AssetMaterialization,
     InputDefinition, 
-    Optional,
     OutputDefinition, 
+    Optional,
     SolidDefinition, 
     SolidExecutionContext, 
     check,
@@ -69,6 +69,8 @@ def run_elt(name: str, tap: str, target: str, job_id: str) -> FunctionType:
 def meltano_elt_solid(
     tap: str,
     target: str,
+    input_defs: List[InputDefinition] = [],
+    output_defs: List[OutputDefinition] = [],
     name: Optional[str] = None,
     job_id: Optional[str] = None
 ) -> SolidDefinition:
@@ -100,8 +102,8 @@ def meltano_elt_solid(
 
     return SolidDefinition(
         name=name,
-        input_defs=[InputDefinition(name='before', dagster_type=Nothing)],
-        output_defs=[OutputDefinition(name='after', dagster_type=Nothing)],
+        input_defs=input_defs,
+        output_defs=output_defs,
         compute_fn=run_elt(
             name=name,
             tap=tap,

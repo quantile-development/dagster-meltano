@@ -8,7 +8,8 @@
   "extensions": [
     "ms-python.vscode-pylance",
     "mechatroner.rainbow-csv",
-    "njpwerner.autodocstring"
+    "njpwerner.autodocstring",
+    "github.autopilot"
   ],
 
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
