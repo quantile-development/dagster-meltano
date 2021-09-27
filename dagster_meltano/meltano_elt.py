@@ -77,7 +77,6 @@ class MeltanoELT:
                 cwd=os.getenv('MELTANO_PROJECT_ROOT'),  # Start the command in the root of the Meltano project
                 env={
                     **os.environ,  # Pass all environment variables from the Dagster environment
-                    'TARGET_JSONL_DESTINATION_PATH': 'fresh' 
                 },
                 preexec_fn=pre_exec,
             )
