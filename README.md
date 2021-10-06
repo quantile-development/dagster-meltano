@@ -2,6 +2,7 @@
 A dagster plugin that allows you to run Meltano pipelines using Dagster.
 
 [![Open in Visual Studio Code](https://open.vscode.dev/badges/open-in-vscode.svg)](https://open.vscode.dev/quantile-development/dagster-meltano)
+[![Downloads](https://pepy.tech/badge/dagster-meltano/month)](https://pepy.tech/project/dagster-meltano)
 
 ## Installation
 1. Install using pip `pip install dagster-meltano`.
