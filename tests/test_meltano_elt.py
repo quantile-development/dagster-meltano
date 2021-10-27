@@ -2,7 +2,7 @@ import pytest
 from dagster_meltano.meltano_elt import MeltanoELT
 
 def test_meltano_elt_construction():
-    """On successfull creation no errors should be raised
+    """On successfull creation no errors should be raised.
     """    
     meltano_elt = MeltanoELT(
         tap="tap-csv",
