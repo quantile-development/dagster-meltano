@@ -1,6 +1,6 @@
 import os
 from subprocess import PIPE, Popen, STDOUT
-from typing import Generator, List
+from typing import Generator, List, Optional
 import signal
 
 def pre_exec():
@@ -17,7 +17,8 @@ class MeltanoELT:
         tap: str,
         target: str,
         job_id: str,
-        full_refresh: bool
+        full_refresh: bool,
+        env_vars: Optional[dict],
     ) -> None:
         """Initialize a new Meltano ELT process.
 
@@ -26,12 +27,15 @@ class MeltanoELT:
             target (str): The name of the Meltano target.
             job_id (str): The id of the job.
             full_refresh (bool): Whether to ignore existing state.
+            env_vars (Optional[dict]): Additional environment variables to pass to the
+                command context.
         """
         self.tap = tap
         self.target = target
         self.job_id = job_id
         self.full_refresh = full_refresh
         self._elt_process = None
+        self.env_vars = env_vars
 
     @property
     def elt_command(self) -> List[str]:
@@ -77,6 +81,7 @@ class MeltanoELT:
                 cwd=os.getenv('MELTANO_PROJECT_ROOT'),  # Start the command in the root of the Meltano project
                 env={
                     **os.environ,  # Pass all environment variables from the Dagster environment
+                    **self.env_vars
                 },
                 preexec_fn=pre_exec,
             )

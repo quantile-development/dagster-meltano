@@ -4,14 +4,13 @@ project_id: 315567d7-95e5-463a-aeb1-343fa09e2e5c
 plugins:
   extractors:
   - name: tap-csv
-    variant: meltano
-    pip_url: git+https://gitlab.com/meltano/tap-csv.git
+    variant: meltanolabs
+    pip_url: git+https://github.com/MeltanoLabs/tap-csv.git
     config:
       files:
-      - entity: sample
-        file: extract/sample.csv
-        keys:
-        - id
+        - entity: "sample"
+          path: extract/sample.csv
+          keys: ["id"]
     select:
     - sample.id
   loaders:

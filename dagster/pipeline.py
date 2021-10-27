@@ -1,3 +1,5 @@
+import json
+
 from dagster import (
     pipeline,
     InputDefinition, 
@@ -12,5 +14,6 @@ def meltano_pipeline():
         output_defs=[OutputDefinition(dagster_type=Nothing)],
         tap='tap-csv',
         target='target-jsonl',
-        job_id='csv-to-jsonl'
+        job_id='csv-to-jsonl',
+        env_vars={"TAP_CSV__SELECT": json.dumps(["sample.id"])}
     )
