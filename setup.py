@@ -20,6 +20,13 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
+    extras_require={
+        "development": [
+            "pytest==6.2", 
+            "meltano==1.85", 
+            "dagit==0.13"
+        ]
+    },
     packages=['dagster_meltano'],
     python_requires=">=3.6",
 )

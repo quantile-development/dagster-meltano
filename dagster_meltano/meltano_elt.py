@@ -14,7 +14,7 @@ class MeltanoELT:
         target: str,
         job_id: str,
         full_refresh: bool,
-        env_vars: Optional[dict],
+        env_vars: Optional[dict] = {},
     ) -> None:
         """Initialize a new Meltano ELT process.
 

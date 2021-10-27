@@ -33,7 +33,8 @@ def meltano_pipeline():
 ### Environment Setup
 1. Open this repository in Visual Studio Code.
 2. Install the [Remote - Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) plugin for Visual Studio Code.
-3. Wait for the container setup, it should automatically install all Meltano plugins and start Dagit. 
+3. Wait for the container setup, it should automatically install all Meltano plugins. 
+4. Open the integrated terminal and start Dagit `dagit -f dagster/pipeline.py`
 4. Visit `localhost:3000` to access Dagit.
 
 If using another IDE:

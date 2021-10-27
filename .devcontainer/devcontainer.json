@@ -1,41 +1,31 @@
 {
-  "name": "dagster-meltano",
-  "build": {
-    "dockerfile": "Dockerfile"
-  },
-
-  // Add the IDs of extensions you want installed when the container is created.
-  "extensions": [
-    "ms-python.vscode-pylance",
-    "mechatroner.rainbow-csv",
-    "njpwerner.autodocstring",
-    "github.autopilot"
-  ],
-
-  // Use 'forwardPorts' to make a list of ports inside the container available locally.
-  "forwardPorts": [3000],
-
-  // Don't let vscode override the Dockerfile command
-  "overrideCommand": false,
-
-  // Use 'postCreateCommand' to run commands after the container is created.
-  "postCreateCommand": "cd meltano && meltano install",
-
-  // Set *default* container specific settings.json values on container create.
-  "settings": {
-    "python.linting.ignorePatterns": [
-      ".vscode/*.py",
-      "**/site-packages/**/*.py",
-      ".meltano"
+    "name": "dagster-meltano",
+    "build": {
+        "dockerfile": "../Dockerfile"
+    },
+    "extensions": [
+        "ms-python.vscode-pylance",
+        "mechatroner.rainbow-csv",
+        "njpwerner.autodocstring",
+        "github.autopilot"
     ],
-    "python.testing.pytestEnabled": false,
-    "files.exclude": {
-      "**/.git": true,
-      "**/.svn": true,
-      "**/.hg": true,
-      "**/CVS": true,
-      "**/.DS_Store": true,
-      "**/__pycache__": true
+    "postCreateCommand": "cd meltano && meltano install",
+    "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python3.9",
+        "python.linting.ignorePatterns": [
+            ".vscode/*.py",
+            "**/site-packages/**/*.py",
+            ".meltano"
+        ],
+        "files.exclude": {
+            "**/.git": true,
+            "**/.svn": true,
+            "**/.hg": true,
+            "**/CVS": true,
+            "**/.DS_Store": true,
+            "**/__pycache__": true
+        },
+        "python.testing.unittestEnabled": false,
+        "python.testing.pytestEnabled": true,
     }
-  }
 }
