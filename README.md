@@ -44,7 +44,8 @@ If using another IDE:
 5. Run dagit: `dagit -f dagster_meltano/tests/pipeline.py`
 
 ### Testing
-We use Dagster's default setup for testing and linting.
+We use [Dagster's default setup](https://docs.dagster.io/community/contributing#developing-dagster) 
+for testing and linting.
 
 Specifically linting can be accomplished by installing the appropriate linters:
 
