@@ -13,11 +13,12 @@ from dagster import (
 )
 from dagster_meltano.meltano_elt import MeltanoELT
 
-def run_elt(name: str, tap: str, target: str, job_id: str) -> FunctionType:
+def run_elt(name: str, tap: str, target: str, job_id: str, env_vars: Optional[dict]) -> FunctionType:
     check.str_param(name, 'name')
     check.str_param(tap, 'tap')
     check.str_param(target, 'target')
     check.str_param(job_id, 'job_id')
+    check.dict_param(env_vars, 'env_vars', key_type=str, value_type=str)
 
     def command(step_context: SolidExecutionContext, inputs) -> Generator[AssetMaterialization, None, None]:
         check.inst_param(step_context, "step_context", SolidExecutionContext)
@@ -35,7 +36,8 @@ def run_elt(name: str, tap: str, target: str, job_id: str) -> FunctionType:
             tap=tap,
             target=target,
             job_id=job_id,
-            full_refresh=full_refresh
+            full_refresh=full_refresh,
+            env_vars=env_vars,
         )
 
         for line in meltano_elt.logs:
@@ -66,19 +68,20 @@ def run_elt(name: str, tap: str, target: str, job_id: str) -> FunctionType:
 
     return command
 
+
 def meltano_elt_solid(
     tap: str,
     target: str,
     input_defs: List[InputDefinition] = [],
     output_defs: List[OutputDefinition] = [],
     name: Optional[str] = None,
-    job_id: Optional[str] = None
+    job_id: Optional[str] = None,
+    env_vars: Optional[dict] = None,
 ) -> SolidDefinition:
     """Create a solid for a meltano elt process.
     
     Args:
         name (str): The name of the solid.
-        description (Optional[str]): If set, description used for solid.
 
     Returns:
         SolidDefinition: The solid that runs the Meltano ELT process.
@@ -108,7 +111,8 @@ def meltano_elt_solid(
             name=name,
             tap=tap,
             target=target,
-            job_id=job_id
+            job_id=job_id,
+            env_vars=env_vars,
         ),
         config_schema={
             'full_refresh': Field(bool, default_value=False, description='Whether to ignore state on this run')
