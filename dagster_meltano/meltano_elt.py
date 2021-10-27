@@ -14,7 +14,7 @@ class MeltanoELT:
         target: str,
         job_id: str,
         full_refresh: bool,
-        env_vars: Optional[dict] = {},
+        env_vars: Optional[dict] = None,
     ) -> None:
         """Initialize a new Meltano ELT process.
 
@@ -26,6 +26,9 @@ class MeltanoELT:
             env_vars (Optional[dict]): Additional environment variables to pass to the
                 command context.
         """
+        if env_vars is None:
+            env_vars = {}
+
         self.tap = tap
         self.target = target
         self.job_id = job_id
