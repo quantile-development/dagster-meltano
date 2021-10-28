@@ -11,7 +11,7 @@
     ],
     "postCreateCommand": "cd meltano && meltano install",
     "settings": {
-        "python.defaultInterpreterPath": "/usr/local/bin/python3.9",
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
         "python.linting.ignorePatterns": [
             ".vscode/*.py",
             "**/site-packages/**/*.py",
@@ -23,7 +23,8 @@
             "**/.hg": true,
             "**/CVS": true,
             "**/.DS_Store": true,
-            "**/__pycache__": true
+            "**/__pycache__": true,
+            ".pytest_cache": true
         },
         "python.testing.unittestEnabled": false,
         "python.testing.pytestEnabled": true,
