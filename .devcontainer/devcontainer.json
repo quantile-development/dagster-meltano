@@ -7,7 +7,8 @@
         "ms-python.vscode-pylance",
         "mechatroner.rainbow-csv",
         "njpwerner.autodocstring",
-        "github.autopilot"
+        "github.autopilot",
+        "waderyan.gitblame"
     ],
     "postCreateCommand": "cd meltano && meltano install",
     "settings": {
