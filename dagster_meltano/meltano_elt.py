@@ -1,24 +1,20 @@
+"""Class for Meltano ELT command"""
+
 import os
-from subprocess import PIPE, Popen, STDOUT
+from subprocess import PIPE, STDOUT, Popen
 from typing import Generator, List, Optional
-import signal
 
-def pre_exec():
-    # Restore default signal disposition and invoke setsid
-    for sig in ("SIGPIPE", "SIGXFZ", "SIGXFSZ"):
-        if hasattr(signal, sig):
-            signal.signal(getattr(signal, sig), signal.SIG_DFL)
-
-    os.setsid()
 
 class MeltanoELT:
+    """Control `meltano elt` command."""
+
     def __init__(
         self,
         tap: str,
         target: str,
         job_id: str,
         full_refresh: bool,
-        env_vars: Optional[dict] = {},
+        env_vars: Optional[dict] = None,
     ) -> None:
         """Initialize a new Meltano ELT process.
 
@@ -30,6 +26,9 @@ class MeltanoELT:
             env_vars (Optional[dict]): Additional environment variables to pass to the
                 command context.
         """
+        if env_vars is None:
+            env_vars = {}
+
         self.tap = tap
         self.target = target
         self.job_id = job_id
@@ -45,18 +44,11 @@ class MeltanoELT:
             List[str]: All parts of the ELT command.
         """
         # All default parts of the command
-        elt_command = [
-            'meltano', 
-            'elt', 
-            self.tap,
-            self.target,
-            '--job_id',
-            self.job_id
-        ]
+        elt_command = ["meltano", "elt", self.tap, self.target, "--job_id", self.job_id]
 
         # If the user specified a full refresh
         if self.full_refresh:
-            elt_command += ['--full-refresh']
+            elt_command += ["--full-refresh"]
 
         return elt_command
 
@@ -64,7 +56,7 @@ class MeltanoELT:
     def elt_process(self) -> Popen:
         """Creates a subprocess that runs the Meltano ELT command.
         It is started in the Meltano project root, and inherits environment.
-        variables from the Dagster environment. 
+        variables from the Dagster environment.
 
         It injects tap and target configuration by utilizing environment variables.
 
@@ -78,12 +70,14 @@ class MeltanoELT:
                 self.elt_command,
                 stdout=PIPE,
                 stderr=STDOUT,
-                cwd=os.getenv('MELTANO_PROJECT_ROOT'),  # Start the command in the root of the Meltano project
+                cwd=os.getenv(
+                    "MELTANO_PROJECT_ROOT"
+                ),  # Start the command in the root of the Meltano project
                 env={
                     **os.environ,  # Pass all environment variables from the Dagster environment
-                    **self.env_vars
+                    **self.env_vars,
                 },
-                preexec_fn=pre_exec,
+                start_new_session=True,
             )
 
         return self._elt_process

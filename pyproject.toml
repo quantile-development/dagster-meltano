@@ -4,3 +4,23 @@ requires = [
     "wheel"
 ]
 build-backend = "setuptools.build_meta"
+
+[tool.black]
+line-length = 100
+exclude = '''
+/(
+    build
+  | buck-out
+  | dist
+  | _build
+  | \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.nox
+  | \.tox
+  | \.venv
+  | snapshots
+)/
+'''
+target_version = ['py36', 'py37', 'py38']
