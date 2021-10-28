@@ -38,6 +38,15 @@
         ],
         "python.linting.enabled": true,
         "python.linting.pylintEnabled": true,
-        "python.linting.lintOnSave": true
+        "python.linting.lintOnSave": true,
+        "python.sortImports.args": [
+            "--profile",
+            "black"
+        ],
+        "[python]": {
+            "editor.codeActionsOnSave": {
+                "source.organizeImports": true
+            }
+        }
     }
 }
