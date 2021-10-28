@@ -27,5 +27,16 @@
         },
         "python.testing.unittestEnabled": false,
         "python.testing.pytestEnabled": true,
+        "editor.formatOnSave": true,
+        "python.formatting.provider": "black",
+        "python.formatting.blackArgs": [
+            "--line-length",
+            "100",
+            "-S",
+            "--fast",
+        ],
+        "python.linting.enabled": true,
+        "python.linting.pylintEnabled": true,
+        "python.linting.lintOnSave": true
     }
 }
