@@ -24,5 +24,7 @@ jobs:
           pip install ".[development]"
       - name: Run test suite
         run: |
+          cd meltano/
           meltano install
+          cd ..
           pytest
