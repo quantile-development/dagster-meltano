@@ -27,9 +27,7 @@ def _create_meltano_elt(full_refresh: bool = True) -> MeltanoELT:
 
 
 def test_meltano_elt_construction():
-    """
-    On successfull creation no errors should be raised.
-    """
+    """On successfull creation no errors should be raised."""
     meltano_elt = _create_meltano_elt()
 
     # Test if the instance is of the right type
@@ -38,7 +36,7 @@ def test_meltano_elt_construction():
         "meltano",
         "elt",
         "tap-csv",
-        "target-csv",
+        "target-json",
         "--job_id",
         "tap-csv-target-json",
         "--full-refresh",
@@ -46,9 +44,7 @@ def test_meltano_elt_construction():
 
 
 def test_meltano_elt_command():
-    """
-    Test if the generated meltano elt command is of the correct format.
-    """
+    """Test if the generated meltano elt command is of the correct format."""
     meltano_elt = _create_meltano_elt()
 
     # Test if the command is of the right format
@@ -64,9 +60,7 @@ def test_meltano_elt_command():
 
 
 def test_meltano_elt_command_no_refresh():
-    """
-    Test whether the '--full-refresh' flag is omitted if no full refresh is requested.
-    """
+    """Test whether the '--full-refresh' flag is omitted if no full refresh is requested."""
     meltano_elt = _create_meltano_elt(full_refresh=False)
 
     # Make sure that the full refresh flag is missing

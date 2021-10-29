@@ -7,6 +7,9 @@ from dagster import AssetMaterialization, execute_solid
 from dagster_meltano.solids import meltano_elt_solid
 
 
+os.environ["MELTANO_PROJECT_ROOT"] = (Path(__file__).parents[2] / 'meltano').__str__()
+
+
 def test_meltano_elt_solid_explicit_params():
     result = execute_solid(
         meltano_elt_solid,
