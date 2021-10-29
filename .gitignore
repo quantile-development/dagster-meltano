@@ -4,4 +4,5 @@ dist/
 .idea
 .env
 .meltano
+.vscode
 meltano/load/sample.jsonl

@@ -29,12 +29,12 @@ class MeltanoELT:
         if env_vars is None:
             env_vars = {}
 
-        self.tap = tap
-        self.target = target
-        self.job_id = job_id
-        self.full_refresh = full_refresh
+        self._tap = tap
+        self._target = target
+        self._job_id = job_id
+        self._full_refresh = full_refresh
         self._elt_process = None
-        self.env_vars = env_vars
+        self._env_vars = env_vars
 
     @property
     def elt_command(self) -> List[str]:
@@ -44,10 +44,10 @@ class MeltanoELT:
             List[str]: All parts of the ELT command.
         """
         # All default parts of the command
-        elt_command = ["meltano", "elt", self.tap, self.target, "--job_id", self.job_id]
+        elt_command = ["meltano", "elt", self._tap, self._target, "--job_id", self._job_id]
 
         # If the user specified a full refresh
-        if self.full_refresh:
+        if self._full_refresh:
             elt_command += ["--full-refresh"]
 
         return elt_command
@@ -75,7 +75,7 @@ class MeltanoELT:
                 ),  # Start the command in the root of the Meltano project
                 env={
                     **os.environ,  # Pass all environment variables from the Dagster environment
-                    **self.env_vars,
+                    **self._env_vars,
                 },
                 start_new_session=True,
             )

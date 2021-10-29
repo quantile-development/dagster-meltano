@@ -30,24 +30,25 @@ def meltano_pipeline():
 ```
 
 ## Development
-### Environment Setup
+### Setup using VSCode
 1. Open this repository in Visual Studio Code.
 2. Install the [Remote - Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) plugin for Visual Studio Code.
 3. Wait for the container setup, it should automatically install all Meltano plugins. 
-4. Open the integrated terminal and start Dagit `dagit -f dagster/pipeline.py`
+4. Open the integrated terminal and start Dagit `dagit -f dagster_meltano/tests/pipeline.py`
 4. Visit `localhost:3000` to access Dagit.
 
-If using another IDE:
+### Setup using other IDEs
 1. Create a virtual environment
 2. Pip install dependencies: `pip install dagster meltano`
 3. Install Meltano plugins: `cd meltano && meltano install && cd ..`
 4. Set env vars: `export MELTANO_PROJECT_ROOT=<path/to/meltano>`
 5. Run dagit: `dagit -f dagster_meltano/tests/pipeline.py`
 
-### Testing
+## Testing and Linting
 We use [Dagster's default setup](https://docs.dagster.io/community/contributing#developing-dagster) 
 for testing and linting.
 
+### Linting
 Specifically linting can be accomplished by installing the appropriate linters:
 
 ```shell

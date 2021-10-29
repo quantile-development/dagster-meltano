@@ -1,6 +1,6 @@
 name: test
 on: 
-  push:
+  pull_request:
     paths:
       - 'dagster_meltano/**'
       - 'tests/**'
@@ -24,4 +24,4 @@ jobs:
           pip install ".[development]"
       - name: Run test suite
         run: |
-          pytest dagster_meltano/
+          pytest
