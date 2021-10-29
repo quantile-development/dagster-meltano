@@ -13,19 +13,19 @@ A dagster plugin that allows you to run Meltano pipelines using Dagster.
 An example of a Dagster pipeline that runs a Meltano elt process.
 
 ```python
-
-from dagster import OutputDefinition, Nothing
-from dagster_meltano.tests import pipeline
-from dagster_meltano.solids import meltano_elt_solid
+import json
+from dagster import OutputDefinition, Nothing, pipeline
+from dagster_meltano.solids import meltano_elt_constructor
 
 
 @pipeline
 def meltano_pipeline():
-    meltano_elt_solid(
+    meltano_elt_constructor(
         output_defs=[OutputDefinition(dagster_type=Nothing)],
-        tap='tap-csv',
-        target='target-jsonl',
-        job_id='csv-to-jsonl'  # Optional
+        tap="tap-csv",
+        target="target-jsonl",
+        job_id="csv-to-jsonl",
+        env_vars={"TAP_CSV__SELECT": json.dumps(["sample.id"])},
     )
 ```
 
