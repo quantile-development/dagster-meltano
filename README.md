@@ -21,7 +21,6 @@ from dagster_meltano.solids import meltano_elt_constructor
 @pipeline
 def meltano_pipeline():
     meltano_elt_constructor(
-        output_defs=[OutputDefinition(dagster_type=Nothing)],
         tap="tap-csv",
         target="target-jsonl",
         job_id="csv-to-jsonl",
@@ -34,7 +33,7 @@ def meltano_pipeline():
 1. Open this repository in Visual Studio Code.
 2. Install the [Remote - Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) plugin for Visual Studio Code.
 3. Wait for the container setup, it should automatically install all Meltano plugins. 
-4. Open the integrated terminal and start Dagit `dagit -f dagster_meltano/tests/pipeline.py`
+4. Open the integrated terminal and start Dagit `dagit -f dagster_meltano/tests/repo.py`
 4. Visit `localhost:3000` to access Dagit.
 
 ### Setup using other IDEs
@@ -42,7 +41,7 @@ def meltano_pipeline():
 2. Pip install dependencies: `pip install dagster meltano`
 3. Install Meltano plugins: `cd meltano && meltano install && cd ..`
 4. Set env vars: `export MELTANO_PROJECT_ROOT=<path/to/meltano>`
-5. Run dagit: `dagit -f dagster_meltano/tests/pipeline.py`
+5. Run dagit: `dagit -f dagster_meltano/tests/repo.py`
 
 ## Testing and Linting
 We use [Dagster's default setup](https://docs.dagster.io/community/contributing#developing-dagster) 

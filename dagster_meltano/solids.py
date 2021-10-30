@@ -1,7 +1,7 @@
 """Composable solids for configuring Meltano commands in pipeline."""
 
 from types import FunctionType
-from typing import Generator, List
+from typing import Generator, Tuple
 
 from dagster import (
     AssetMaterialization,
@@ -16,6 +16,7 @@ from dagster import (
     solid,
 )
 
+from dagster_meltano.dagster_types import MeltanoEltArgsType
 from dagster_meltano.meltano_elt import MeltanoELT
 
 
@@ -40,6 +41,7 @@ def run_elt(
             command context.
         log (SolidExecutionContext.log): The solid execution context's logger.
     """
+    # Create a MeltanoELT instance that runs the Meltano elt process
     meltano_elt = MeltanoELT(
         tap=tap,
         target=target,
@@ -48,17 +50,21 @@ def run_elt(
         env_vars=env_vars,
     )
 
+    # Read the Meltano logs, and log them to the Dagster logger
     for line in meltano_elt.logs:
         log.info(line)
 
+    # Wait for the process to finish
     meltano_elt.elt_process.wait()
 
     return_code = meltano_elt.elt_process.returncode
 
+    # If the elt process failed
     if return_code != 0:
         error = f"The meltano elt failed with code {return_code}"
         log.error(error)
         raise Exception(error)
+    # If the elt process succeeded
     else:
         log.info(f"Meltano exited with return code {return_code}")
 
@@ -84,7 +90,7 @@ def elt_factory(
     check.dict_param(env_vars, "env_vars", key_type=str, value_type=str)
 
     def command(
-        step_context: SolidExecutionContext, inputs  # pylint: disable=W0613
+        step_context: SolidExecutionContext, inputs
     ) -> Generator[AssetMaterialization, None, None]:
         check.inst_param(step_context, "step_context", SolidExecutionContext)
         check.param_invariant(
@@ -92,6 +98,9 @@ def elt_factory(
             "context",
             "StepExecutionContext must have valid run_config",
         )
+
+        print("args")
+        print(inputs['elt_args'])
 
         full_refresh = step_context.solid_config["full_refresh"]
 
@@ -102,7 +111,7 @@ def elt_factory(
     return command
 
 
-def optional_args(name, tap, target, job_id) -> (str, str):
+def optional_args(name: str, tap: str, target: str, job_id: str) -> Tuple[str, str]:
     """Resolve optional Meltano elt args.
 
     Args:
@@ -128,8 +137,6 @@ def optional_args(name, tap, target, job_id) -> (str, str):
 def meltano_elt_constructor(
     tap: str,
     target: str,
-    input_defs: Optional[List[InputDefinition]] = None,
-    output_defs: Optional[List[OutputDefinition]] = None,
     name: Optional[str] = None,
     job_id: Optional[str] = None,
     env_vars: Optional[dict] = None,
@@ -153,24 +160,23 @@ def meltano_elt_constructor(
     Returns:
         SolidDefinition: The solid that runs the Meltano ELT process.
     """
-    if input_defs is None:
-        input_defs = []
-
-    if output_defs is None:
-        output_defs = []
-
     check.opt_str_param(name, "name")
     check.opt_str_param(job_id, "job_id")
 
     name, job_id = optional_args(name, tap, target, job_id)
 
-    # Add a default tag to indicate this is a Meltano solid
-    default_tags = {"kind": "meltano"}
-
     return SolidDefinition(
         name=name,
-        input_defs=input_defs,
-        output_defs=output_defs,
+        input_defs=[
+            InputDefinition("before", dagster_type=Nothing),
+            InputDefinition(
+                "elt_args",
+                dagster_type=Optional[MeltanoEltArgsType],
+                default_value={},
+                description="Use this type to overwrite meltano elt commands at runtime. You can supply the 'tap', 'target' and 'job_id' keys in a dictionary.",
+            ),
+        ],
+        output_defs=[OutputDefinition(dagster_type=Nothing, name="after")],
         compute_fn=elt_factory(
             name=name,
             tap=tap,
@@ -186,8 +192,8 @@ def meltano_elt_constructor(
             )
         },
         required_resource_keys=set(),
-        description="",
-        tags={**default_tags},
+        description="This solid executes a meltano elt command with the specified tap and target.",
+        tags={"kind": "meltano"},
     )()
 
 

@@ -9,6 +9,6 @@ def repository_example():
     return {
         "pipelines": {
             "meltano_constructor": lambda: meltano_constructor,
-            "meltano_solid": lambda: meltano_solid,
+            # "meltano_solid": lambda: meltano_solid,
         }
     }

@@ -4,6 +4,8 @@ import os
 from subprocess import PIPE, STDOUT, Popen
 from typing import Generator, List, Optional
 
+from dagster import AssetMaterialization, SolidExecutionContext
+
 
 class MeltanoELT:
     """Control `meltano elt` command."""
@@ -92,3 +94,47 @@ class MeltanoELT:
         # Loop through the stdout of the ELT process
         for line in iter(self.elt_process.stdout.readline, b""):
             yield line.decode("utf-8").rstrip()
+
+    def run(
+        self,
+        log: SolidExecutionContext.log,
+    ) -> Generator[AssetMaterialization, None, None]:
+        """Run `meltano elt` command yielding asset materialization and producing logs.
+
+        Args:
+            name (str): The name of the solid.
+            tap (str): The name of the Meltano tap.
+            target (str): The name of the Meltano target.
+            job_id (str): The id of the job.
+            full_refresh (bool): Whether to ignore existing state.
+            env_vars (Optional[dict]): Additional environment variables to pass to the
+                command context.
+            log (SolidExecutionContext.log): The solid execution context's logger.
+        """
+        # Read the Meltano logs, and log them to the Dagster logger
+        for line in self.logs:
+            log.info(line)
+
+        # Wait for the process to finish
+        self.elt_process.wait()
+
+        return_code = self.elt_process.returncode
+
+        # If the elt process failed
+        if return_code != 0:
+            error = f"The meltano elt failed with code {return_code}"
+            log.error(error)
+            raise Exception(error)
+        # If the elt process succeeded
+        else:
+            log.info(f"Meltano exited with return code {return_code}")
+
+        # yield AssetMaterialization(
+        #     asset_key=name,
+        #     metadata={
+        #         "Tap": tap,
+        #         "Target": target,
+        #         "Job ID": job_id,
+        #         "Full Refresh": "True" if full_refresh else "False",
+        #     },
+        # )
