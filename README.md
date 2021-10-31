@@ -9,24 +9,67 @@ A dagster plugin that allows you to run Meltano pipelines using Dagster.
 2. Make sure you have an installed Meltano project.
 3. Point the plugin to the root of the Meltano project by defining `MELTANO_PROJECT_ROOT`.
 
-## Example
+## Examples
 An example of a Dagster pipeline that runs a Meltano elt process.
 
 ```python
 import json
 from dagster import OutputDefinition, Nothing, pipeline
-from dagster_meltano.solids import meltano_elt_constructor
+from dagster_meltano.solids import MeltanoEltSolid
 
 
 @pipeline
 def meltano_pipeline():
-    meltano_elt_constructor(
+    MeltanoEltSolid(
+        name="tap_csv_target_jsonl",
         tap="tap-csv",
         target="target-jsonl",
         job_id="csv-to-jsonl",
+        tap_config={},
+        target_config={
+            "destination_path": "load"
+        },
         env_vars={"TAP_CSV__SELECT": json.dumps(["sample.id"])},
+    ).solid()
+```
+
+You can also inject information from previous solids during runtime.
+
+```python
+import json
+from dagster import OutputDefinition, Nothing, pipeline
+from dagster_meltano.solids import MeltanoEltSolid
+from dagster_meltano.dagster_types import MeltanoEltArgsType, MeltanoEnvVarsType
+
+@solid
+def elt_args() -> MeltanoEltArgsType:
+    return {
+        "tap": "tap-csv",
+        "target": "target-jsonl",
+        "job_id": "csv-to-jsonl",
+    }
+
+@solid
+def env_vars() -> MeltanoEnvVarsType:
+    return {"TAP_CSV__SELECT": json.dumps(["sample.id"])}
+
+@pipeline
+def meltano_pipeline():
+    MeltanoEltSolid(
+        name="tap_csv_target_jsonl",
+        tap_config={},
+        target_config={
+            "destination_path": "load"
+        }
+    ).solid(
+        elt_args=elt_args(), 
+        env_vars=env_vars()
     )
 ```
+
+The last way to configure the Meltano elt solid is to overwrite the Dagster configuration. 
+
+![configuration overwrite](./images/meltano-elt-solid-config.jpg)
 
 ## Development
 ### Setup using VSCode
