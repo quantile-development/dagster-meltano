@@ -1,14 +1,8 @@
 from dagster import repository
 
-from dagster_meltano.tests.constructor import meltano_constructor
-from dagster_meltano.tests.solid import meltano_solid
+from dagster_meltano.tests.meltano_elt_pipeline import meltano_elt_pipeline
 
 
 @repository
 def repository_example():
-    return {
-        "pipelines": {
-            "meltano_constructor": lambda: meltano_constructor,
-            # "meltano_solid": lambda: meltano_solid,
-        }
-    }
+    return {"pipelines": {"meltano_elt_pipeline": lambda: meltano_elt_pipeline}}

@@ -1,6 +1,5 @@
 from dagster_meltano.meltano_elt import MeltanoELT
 
-
 # Default parameters supplied to MeltanoELT
 meltano_elt_params = {
     "tap": "tap-csv",
