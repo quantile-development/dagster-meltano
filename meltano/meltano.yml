@@ -11,8 +11,6 @@ plugins:
         - entity: "sample"
           path: extract/sample.csv
           keys: ["id"]
-    select:
-    - sample.id
   loaders:
   - name: target-jsonl
     variant: andyh1203

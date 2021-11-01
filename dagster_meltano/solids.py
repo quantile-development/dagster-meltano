@@ -1,140 +1,217 @@
-"""Composable solids for configuring Meltano commands in pipeline."""
-
-from types import FunctionType
-from typing import Generator, List
+from typing import Any, Dict, List
 
 from dagster import (
     AssetMaterialization,
     Field,
     InputDefinition,
+    Nothing,
     Optional,
     OutputDefinition,
+    Permissive,
     SolidDefinition,
     SolidExecutionContext,
-    check,
 )
 
+from dagster_meltano.dagster_types import MeltanoEltArgsType, MeltanoEnvVarsType
 from dagster_meltano.meltano_elt import MeltanoELT
 
 
-def run_elt(
-    name: str, tap: str, target: str, job_id: str, env_vars: Optional[dict]
-) -> FunctionType:
-    """Run `meltano elt` command yielding asset materialization and producing logs."""
-    check.str_param(name, "name")
-    check.str_param(tap, "tap")
-    check.str_param(target, "target")
-    check.str_param(job_id, "job_id")
-    check.dict_param(env_vars, "env_vars", key_type=str, value_type=str)
-
-    def command(
-        step_context: SolidExecutionContext, inputs  # pylint: disable=W0613
-    ) -> Generator[AssetMaterialization, None, None]:
-        check.inst_param(step_context, "step_context", SolidExecutionContext)
-        check.param_invariant(
-            isinstance(step_context.run_config, dict),
-            "context",
-            "StepExecutionContext must have valid run_config",
-        )
-
-        full_refresh = step_context.solid_config["full_refresh"]
-
-        log = step_context.log
-
-        meltano_elt = MeltanoELT(
-            tap=tap,
-            target=target,
-            job_id=job_id,
-            full_refresh=full_refresh,
-            env_vars=env_vars,
-        )
-
-        for line in meltano_elt.logs:
-            log.info(line)
-
-        meltano_elt.elt_process.wait()
-
-        return_code = meltano_elt.elt_process.returncode
-
-        if return_code != 0:
-            error = f"The meltano elt failed with code {return_code}"
-            log.error(error)
-            raise Exception(error)
-        else:
-            log.info(f"Meltano exited with return code {return_code}")
-
-        yield AssetMaterialization(
-            asset_key=name,
-            metadata={
-                "Tap": tap,
-                "Target": target,
-                "Job ID": job_id,
-                "Full Refresh": "True" if full_refresh else "False",
-            },
-        )
-
-    return command
-
-
-def meltano_elt_solid(
-    tap: str,
-    target: str,
-    input_defs: Optional[List[InputDefinition]] = None,
-    output_defs: Optional[List[OutputDefinition]] = None,
-    name: Optional[str] = None,
-    job_id: Optional[str] = None,
-    env_vars: Optional[dict] = None,
-) -> SolidDefinition:
-    """Create a solid for a meltano elt process.
-
-    Args:
-        name (str): The name of the solid.
-
-    Returns:
-        SolidDefinition: The solid that runs the Meltano ELT process.
-    """
-    if input_defs is None:
-        input_defs = []
-
-    if output_defs is None:
-        output_defs = []
-
-    check.opt_str_param(name, "name")
-    check.opt_str_param(job_id, "job_id")
-
-    # If no name is specified, create a name based on the tap and target name
-    if not name:
-        name = f"{tap}_{target}"
-
-    # Solid names cannot contain dashes
-    name = name.replace("-", "_")
-
-    # If no job id is defined, we base it on the tap and target name
-    if not job_id:
-        job_id = f"{tap}-{target}"
-
-    # Add a default tag to indicate this is a Meltano solid
-    default_tags = {"kind": "meltano"}
-
-    return SolidDefinition(
-        name=name,
-        input_defs=input_defs,
-        output_defs=output_defs,
-        compute_fn=run_elt(
-            name=name,
-            tap=tap,
-            target=target,
-            job_id=job_id,
-            env_vars=env_vars,
+class MeltanoEltSolid:
+    input_defs = [
+        InputDefinition(
+            "before",
+            dagster_type=Nothing,
+            description="Use this input to run the Meltano elt solid after another solid.",
         ),
-        config_schema={
-            "full_refresh": Field(
-                bool,
-                default_value=False,
-                description="Whether to ignore state on this run",
-            )
-        },
-        required_resource_keys=set(),
-        description="",
-        tags={**default_tags},
-    )()
+        InputDefinition(
+            "elt_args",
+            dagster_type=Optional[MeltanoEltArgsType],
+            default_value={},
+            description="""
+            Use this type to overwrite Meltano elt commands at runtime. 
+            You can supply the 'tap', 'target' and 'job_id' keys in a dictionary.
+            """,
+        ),
+        InputDefinition(
+            "env_vars",
+            dagster_type=Optional[MeltanoEnvVarsType],
+            default_value={},
+            description="""
+            Use this type to inject environment variables into the Meltano elt process.
+            """,
+        ),
+    ]
+    output_defs = [OutputDefinition(dagster_type=Nothing, name="after")]
+    config_schema = {
+        "tap": Field(
+            str,
+            is_required=False,
+            description="The singer tap that extracts the data.",
+        ),
+        "target": Field(
+            str,
+            is_required=False,
+            description="The singer target that stores the data.",
+        ),
+        "job_id": Field(
+            str,
+            is_required=False,
+            description="The meltano job id, used for incremental replication.",
+        ),
+        "env_vars": Field(
+            Permissive({}),
+            is_required=False,
+            description="Inject custom environment variables into the Meltano elt process.",
+        ),
+        "tap_config": Field(
+            Permissive({}),
+            is_required=False,
+            description="Overwrite the tap configuration.",
+        ),
+        "target_config": Field(
+            Permissive({}),
+            is_required=False,
+            description="Overwrite the target configuration.",
+        ),
+        "full_refresh": Field(
+            bool,
+            is_required=False,
+            description="Whether to overwrite all existing data or not.",
+        ),
+    }
+
+    def __init__(
+        self,
+        name: str,
+        tap: Optional[str] = None,
+        target: Optional[str] = None,
+        job_id: Optional[str] = None,
+        tap_config: Optional[dict] = None,
+        target_config: Optional[dict] = None,
+        env_vars: Optional[dict] = None,
+        full_refresh: Optional[bool] = False,
+    ) -> None:
+        if tap_config == None:
+            self.tap_config = {}
+        if target_config == None:
+            self.target_config = {}
+        if env_vars == None:
+            self.env_vars = {}
+
+        self.name = name
+        self.tap = tap
+        self.target = target
+        self.job_id = job_id
+        self.tap_config = tap_config
+        self.target_config = target_config
+        self.env_vars = env_vars
+        self.full_refresh = full_refresh
+
+    def _compute_hook(self, step_context: SolidExecutionContext, inputs: Dict[str, Any]):
+        # Fetch all variables from upstream nodes
+        elt_args = inputs["elt_args"]
+        upstream_tap = elt_args.get("tap")
+        upstream_target = elt_args.get("target")
+        upstream_job_id = elt_args.get("job_id")
+        upstream_env_vars = inputs["env_vars"]
+
+        # Fetch all variables defined in the initializer
+        self_tap = self.tap
+        self_target = self.target
+        self_job_id = self.job_id
+        self_tap_config = self.tap_config
+        self_target_config = self.target_config
+        self_env_vars = self.env_vars
+        self_full_refresh = self.full_refresh
+
+        # Fetch all variables defined by solid configuration
+        config_tap = step_context.solid_config.get("tap")
+        config_target = step_context.solid_config.get("target")
+        config_job_id = step_context.solid_config.get("job_id")
+        config_tap_config = step_context.solid_config.get("tap_config")
+        config_target_config = step_context.solid_config.get("target_config")
+        config_env_vars = step_context.solid_config.get("env_vars")
+        config_full_refresh = step_context.solid_config.get("full_refresh")
+
+        # Define the final variables (upstream > dagster-config > intializer)
+        tap = upstream_tap or config_tap or self_tap
+        target = upstream_target or config_target or self_target
+        job_id = (
+            upstream_job_id or config_job_id or self_job_id or self.construct_job_id(tap, target)
+        )
+        tap_config = config_tap_config or self_tap_config
+        target_config = config_target_config or self_target_config
+        env_vars = upstream_env_vars or config_env_vars or self_env_vars
+        full_refresh = config_full_refresh or self_full_refresh
+
+        meltano_elt_args = {
+            "tap": tap,
+            "target": target,
+            "job_id": job_id,
+            "full_refresh": full_refresh,
+            "tap_config": tap_config,
+            "target_config": target_config,
+            "env_vars": env_vars,
+        }
+
+        # Create the Meltano elt process
+        meltano_elt = MeltanoELT(**meltano_elt_args)
+
+        # Run the elt process
+        meltano_elt.run(log=step_context.log)
+
+        # Yield the asset materialization that show information about the elt process
+        yield self.asset_materialization(
+            asset_key=self.construct_asset_key(step_context=step_context), **meltano_elt_args
+        )
+
+    @staticmethod
+    def asset_materialization(
+        asset_key: str,
+        tap: str,
+        target: str,
+        job_id: str,
+        full_refresh: bool,
+        tap_config: Optional[dict],
+        target_config: Optional[dict],
+        env_vars: Optional[dict],
+    ) -> AssetMaterialization:
+        metadata = {
+            "tap": tap,
+            "target": target,
+            "job-id": job_id,
+            "full-refresh": 1 if full_refresh else 0,
+        }
+
+        if tap_config:
+            metadata["tap-config"] = tap_config
+        if target_config:
+            metadata["target-config"] = target_config
+        if env_vars:
+            metadata["env-vars"] = env_vars
+
+        return AssetMaterialization(
+            asset_key=asset_key,
+            metadata=metadata,
+        )
+
+    @staticmethod
+    def construct_asset_key(step_context: SolidExecutionContext) -> List[str]:
+        return [step_context.pipeline_name, step_context.solid_def.name]
+
+    @staticmethod
+    def construct_job_id(tap: str, target: str) -> str:
+        return f"{tap}-{target}"
+
+    @property
+    def solid(self) -> SolidDefinition:
+        return SolidDefinition(
+            name=self.name,
+            input_defs=self.input_defs,
+            output_defs=self.output_defs,
+            description="Executes the Meltano elt process.",
+            required_resource_keys=set(),
+            config_schema=self.config_schema,
+            compute_fn=self._compute_hook,
+            tags={"kind": "meltano"},
+        )

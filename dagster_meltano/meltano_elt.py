@@ -4,6 +4,10 @@ import os
 from subprocess import PIPE, STDOUT, Popen
 from typing import Generator, List, Optional
 
+from dagster import AssetMaterialization, SolidExecutionContext
+
+from dagster_meltano.utils import lower_kebab_to_upper_snake_case
+
 
 class MeltanoELT:
     """Control `meltano elt` command."""
@@ -14,6 +18,8 @@ class MeltanoELT:
         target: str,
         job_id: str,
         full_refresh: bool,
+        tap_config: Optional[dict] = None,
+        target_config: Optional[dict] = None,
         env_vars: Optional[dict] = None,
     ) -> None:
         """Initialize a new Meltano ELT process.
@@ -28,13 +34,19 @@ class MeltanoELT:
         """
         if env_vars is None:
             env_vars = {}
+        if tap_config is None:
+            tap_config = {}
+        if target_config is None:
+            target_config = {}
 
         self._tap = tap
         self._target = target
         self._job_id = job_id
         self._full_refresh = full_refresh
-        self._elt_process = None
         self._env_vars = env_vars
+        self._tap_config = tap_config
+        self._target_config = target_config
+        self._elt_process = None
 
     @property
     def elt_command(self) -> List[str]:
@@ -53,6 +65,20 @@ class MeltanoELT:
         return elt_command
 
     @property
+    def _target_config_env_vars(self):
+        return {
+            lower_kebab_to_upper_snake_case(f"{self._target}_{config_name}"): value
+            for config_name, value in self._target_config.items()
+        }
+
+    @property
+    def _tap_config_env_vars(self):
+        return {
+            lower_kebab_to_upper_snake_case(f"{self._tap}_{config_name}"): value
+            for config_name, value in self._tap_config.items()
+        }
+
+    @property
     def elt_process(self) -> Popen:
         """Creates a subprocess that runs the Meltano ELT command.
         It is started in the Meltano project root, and inherits environment.
@@ -63,7 +89,6 @@ class MeltanoELT:
         Returns:
             Popen: The ELT process.
         """
-
         # Create a Meltano ELT process if it does not already exists
         if not self._elt_process:
             self._elt_process = Popen(
@@ -75,6 +100,8 @@ class MeltanoELT:
                 ),  # Start the command in the root of the Meltano project
                 env={
                     **os.environ,  # Pass all environment variables from the Dagster environment
+                    **self._tap_config_env_vars,
+                    **self._target_config_env_vars,
                     **self._env_vars,
                 },
                 start_new_session=True,
@@ -92,3 +119,37 @@ class MeltanoELT:
         # Loop through the stdout of the ELT process
         for line in iter(self.elt_process.stdout.readline, b""):
             yield line.decode("utf-8").rstrip()
+
+    def run(
+        self,
+        log: SolidExecutionContext.log,
+    ) -> Generator[AssetMaterialization, None, None]:
+        """Run `meltano elt` command yielding asset materialization and producing logs.
+
+        Args:
+            name (str): The name of the solid.
+            tap (str): The name of the Meltano tap.
+            target (str): The name of the Meltano target.
+            job_id (str): The id of the job.
+            full_refresh (bool): Whether to ignore existing state.
+            env_vars (Optional[dict]): Additional environment variables to pass to the
+                command context.
+            log (SolidExecutionContext.log): The solid execution context's logger.
+        """
+        # Read the Meltano logs, and log them to the Dagster logger
+        for line in self.logs:
+            log.info(line)
+
+        # Wait for the process to finish
+        self.elt_process.wait()
+
+        return_code = self.elt_process.returncode
+
+        # If the elt process failed
+        if return_code != 0:
+            error = f"The meltano elt failed with code {return_code}"
+            log.error(error)
+            raise Exception(error)
+        # If the elt process succeeded
+        else:
+            log.info(f"Meltano exited with return code {return_code}")
