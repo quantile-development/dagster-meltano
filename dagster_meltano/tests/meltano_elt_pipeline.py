@@ -27,7 +27,7 @@ def env_vars() -> MeltanoEnvVarsType:
 
 @solid
 def select_patterns() -> MeltanoSelectPatternsType:
-    return [["sample", "*"]]
+    return [["sample", "*"], ['--list', '--all']]
 
 
 @pipeline

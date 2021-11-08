@@ -12,7 +12,10 @@ plugins:
         path: extract/sample.csv
         keys:
         - id
-    select: []
+    select:
+    - test.this
+    - sample.*
+    - sample.*
   loaders:
   - name: target-jsonl
     variant: andyh1203
