@@ -12,8 +12,13 @@ from dagster import (
     SolidExecutionContext,
 )
 
-from dagster_meltano.dagster_types import MeltanoEltArgsType, MeltanoEnvVarsType
+from dagster_meltano.dagster_types import (
+    MeltanoEltArgsType,
+    MeltanoEnvVarsType,
+    MeltanoSelectPatternsType,
+)
 from dagster_meltano.meltano_elt import MeltanoELT
+from dagster_meltano.meltano_select import MeltanoSelect
 
 
 class MeltanoEltSolid:
@@ -31,6 +36,13 @@ class MeltanoEltSolid:
             Use this type to overwrite Meltano elt commands at runtime. 
             You can supply the 'tap', 'target' and 'job_id' keys in a dictionary.
             """,
+        ),
+        InputDefinition(
+            "select_patterns",
+            dagster_type=Optional[MeltanoSelectPatternsType],
+            default_value=[],
+            description="""Meltano select patterns provided as a list of lists (e.g.,
+            [['entity', 'attribute'], ['--rm', 'entity', 'attribute']]""",
         ),
         InputDefinition(
             "env_vars",
@@ -78,6 +90,12 @@ class MeltanoEltSolid:
             is_required=False,
             description="Whether to overwrite all existing data or not.",
         ),
+        "select_patterns": Field(
+            list,
+            is_required=False,
+            description="""Meltano select patterns provided as a list of lists (e.g., 
+            [['entity', 'attribute'], ['--rm', 'entity', 'attribute']]""",
+        ),
     }
 
     def __init__(
@@ -90,13 +108,16 @@ class MeltanoEltSolid:
         target_config: Optional[dict] = None,
         env_vars: Optional[dict] = None,
         full_refresh: Optional[bool] = False,
+        select_patterns: Optional[List[List[str]]] = None,
     ) -> None:
-        if tap_config == None:
+        if tap_config is None:
             self.tap_config = {}
-        if target_config == None:
+        if target_config is None:
             self.target_config = {}
-        if env_vars == None:
+        if env_vars is None:
             self.env_vars = {}
+        if select_patterns is None:
+            self.select_patterns = []
 
         self.name = name
         self.tap = tap
@@ -106,6 +127,7 @@ class MeltanoEltSolid:
         self.target_config = target_config
         self.env_vars = env_vars
         self.full_refresh = full_refresh
+        self.select_patterns = select_patterns
 
     def _compute_hook(self, step_context: SolidExecutionContext, inputs: Dict[str, Any]):
         # Fetch all variables from upstream nodes
@@ -114,6 +136,7 @@ class MeltanoEltSolid:
         upstream_target = elt_args.get("target")
         upstream_job_id = elt_args.get("job_id")
         upstream_env_vars = inputs["env_vars"]
+        upstream_patterns = inputs["select_patterns"]
 
         # Fetch all variables defined in the initializer
         self_tap = self.tap
@@ -123,6 +146,7 @@ class MeltanoEltSolid:
         self_target_config = self.target_config
         self_env_vars = self.env_vars
         self_full_refresh = self.full_refresh
+        self_patterns = self.select_patterns
 
         # Fetch all variables defined by solid configuration
         config_tap = step_context.solid_config.get("tap")
@@ -132,6 +156,7 @@ class MeltanoEltSolid:
         config_target_config = step_context.solid_config.get("target_config")
         config_env_vars = step_context.solid_config.get("env_vars")
         config_full_refresh = step_context.solid_config.get("full_refresh")
+        config_patterns = step_context.solid_config.get("select_patterns")
 
         # Define the final variables (upstream > dagster-config > intializer)
         tap = upstream_tap or config_tap or self_tap
@@ -143,6 +168,7 @@ class MeltanoEltSolid:
         target_config = config_target_config or self_target_config
         env_vars = upstream_env_vars or config_env_vars or self_env_vars
         full_refresh = config_full_refresh or self_full_refresh
+        patterns = upstream_patterns or config_patterns or self_patterns
 
         meltano_elt_args = {
             "tap": tap,
@@ -154,10 +180,22 @@ class MeltanoEltSolid:
             "env_vars": env_vars,
         }
 
-        # Create the Meltano elt process
-        meltano_elt = MeltanoELT(**meltano_elt_args)
+        meltano_select_args = {
+            "tap": tap,
+            "target": target,
+            "tap_config": tap_config,
+            "target_config": target_config,
+            "env_vars": env_vars,
+            "patterns": patterns,
+        }
 
-        # Run the elt process
+        # Create and run the Meltano select process if requested
+        if patterns:
+            meltano_select = MeltanoSelect(**meltano_select_args)
+            meltano_select.run_select_commands(step_context.log)
+
+        # Create and run the Meltano elt process
+        meltano_elt = MeltanoELT(**meltano_elt_args)
         meltano_elt.run(log=step_context.log)
 
         # Yield the asset materialization that show information about the elt process

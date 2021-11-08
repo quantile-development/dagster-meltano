@@ -8,9 +8,11 @@ plugins:
     pip_url: git+https://github.com/MeltanoLabs/tap-csv.git
     config:
       files:
-        - entity: "sample"
-          path: extract/sample.csv
-          keys: ["id"]
+      - entity: sample
+        path: extract/sample.csv
+        keys:
+        - id
+    select: []
   loaders:
   - name: target-jsonl
     variant: andyh1203

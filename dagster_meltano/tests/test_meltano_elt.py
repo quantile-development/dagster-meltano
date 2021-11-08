@@ -26,7 +26,7 @@ def _create_meltano_elt(full_refresh: bool = True) -> MeltanoELT:
 
 
 def test_meltano_elt_construction():
-    """On successfull creation no errors should be raised."""
+    """On successful creation no errors should be raised."""
     meltano_elt = _create_meltano_elt()
 
     # Test if the instance is of the right type
