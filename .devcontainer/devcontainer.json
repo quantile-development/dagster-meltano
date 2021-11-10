@@ -48,6 +48,13 @@
             "editor.codeActionsOnSave": {
                 "source.organizeImports": true
             }
+        },
+        "workbench.colorCustomizations": {
+            "statusBar.background": "#3438bf",
+            "statusBar.foreground": "#cbcbda",
+            "statusBarItem.hoverBackground": "#1f238d",
+            "statusBarItem.remoteBackground": "#3438bf",
+            "statusBarItem.remoteForeground": "#e3e3eb",
         }
     }
 }
