@@ -6,3 +6,4 @@ dist/
 .meltano
 .vscode
 meltano/load/sample.jsonl
+tmp**/

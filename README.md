@@ -30,6 +30,7 @@ def meltano_pipeline():
             "destination_path": "load"
         },
         env_vars={"TAP_CSV__SELECT": json.dumps(["sample.id"])},
+        select_patterns=[["sample", "first_name"], ["--list", "--all"]]
     ).solid()
 ```
 
@@ -37,9 +38,13 @@ You can also inject information from previous solids during runtime.
 
 ```python
 import json
-from dagster import OutputDefinition, Nothing, pipeline
+from dagster import pipeline, solid
 from dagster_meltano.solids import MeltanoEltSolid
-from dagster_meltano.dagster_types import MeltanoEltArgsType, MeltanoEnvVarsType
+from dagster_meltano.dagster_types import (
+    MeltanoEltArgsType,
+    MeltanoEnvVarsType,
+    MeltanoSelectPatternsType,
+)
 
 @solid
 def elt_args() -> MeltanoEltArgsType:
@@ -53,6 +58,10 @@ def elt_args() -> MeltanoEltArgsType:
 def env_vars() -> MeltanoEnvVarsType:
     return {"TAP_CSV__SELECT": json.dumps(["sample.id"])}
 
+@solid
+def select_patterns() -> MeltanoSelectPatternsType:
+    return [["sample", "*"], ['--list', '--all']]
+
 @pipeline
 def meltano_pipeline():
     MeltanoEltSolid(
@@ -63,7 +72,8 @@ def meltano_pipeline():
         }
     ).solid(
         elt_args=elt_args(), 
-        env_vars=env_vars()
+        env_vars=env_vars(),
+        select_patterns=select_patterns(),
     )
 ```
 
