@@ -1,7 +1,9 @@
 import json
 import os
+import re
 from pathlib import Path
 
+import pytest
 from dagster import AssetMaterialization, execute_solid
 
 from dagster_meltano.solids import MeltanoEltSolid
@@ -105,3 +107,44 @@ def test_meltano_elt_solid_env_vars():
     assert metadata["job-id"].text == "tap-csv-target-jsonl"
     assert metadata["full-refresh"].value == 1
     assert initial_output_file_len == final_output_file_len
+
+
+def test_meltano_error_logging_no_traceback():
+    """Logs should produce simple generic error when no traceback."""
+    os.environ["MELTANO_PROJECT_ROOT"] = "/"
+
+    with pytest.raises(Exception) as e:
+        execute_solid(
+            MeltanoEltSolid("csv_to_jsonl").solid,
+            input_values={
+                "elt_args": {
+                    "tap": "tap-csv",
+                    "target": "target-jsonl",
+                    "job_id": "tap-csv-target-jsonl",
+                },
+            },
+        )
+
+    os.environ["MELTANO_PROJECT_ROOT"] = (Path(__file__).parents[2] / "meltano").__str__()
+
+    assert e.value.args[0] == "The meltano elt failed with code 1. See logs for more information."
+    assert not re.search("traceback", e.value.args[0], re.IGNORECASE)
+
+
+def test_meltano_error_logging_traceback():
+    """Error logs should produce traceback."""
+    with pytest.raises(Exception) as e:
+        execute_solid(
+            MeltanoEltSolid("csv_to_jsonl").solid,
+            input_values={
+                "elt_args": {
+                    "tap": "tap-csv",
+                    "target": "target-json",
+                    "job_id": "tap-csv-target-jsonl",
+                },
+            },
+        )
+
+    assert re.search("traceback", e.value.args[0], re.IGNORECASE)
+    assert re.search("most recent call last", e.value.args[0], re.IGNORECASE)  # from true traceback
+    assert re.search("Loader 'target-json' is not known to Meltano", e.value.args[0], re.IGNORECASE)

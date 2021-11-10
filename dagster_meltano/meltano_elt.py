@@ -1,10 +1,11 @@
 """Class for Meltano ELT command"""
 
 import os
+import re
 from subprocess import PIPE, STDOUT, Popen
 from typing import Generator, List, Optional
 
-from dagster import AssetMaterialization, SolidExecutionContext
+from dagster import AssetMaterialization, Failure, SolidExecutionContext
 
 from dagster_meltano.utils import lower_kebab_to_upper_snake_case
 
@@ -137,8 +138,15 @@ class MeltanoELT:
             log (SolidExecutionContext.log): The solid execution context's logger.
         """
         # Read the Meltano logs, and log them to the Dagster logger
+        # Save tracebacks and exceptions for logging as failures
+        error_flag = 0
+        traceback_str = ""
         for line in self.logs:
-            log.info(line)
+            error_flag = 1 if error_flag or re.search("traceback", line, re.IGNORECASE) else 0
+            if error_flag:
+                traceback_str += "\n" + line
+            else:
+                log.info(line)
 
         # Wait for the process to finish
         self.elt_process.wait()
@@ -146,10 +154,14 @@ class MeltanoELT:
         return_code = self.elt_process.returncode
 
         # If the elt process failed
-        if return_code != 0:
-            error = f"The meltano elt failed with code {return_code}"
-            log.error(error)
-            raise Exception(error)
-        # If the elt process succeeded
+        if return_code:
+            if traceback_str:
+                error = f"""The meltano elt failed with code {return_code}. Meltano Traceback:
+                {traceback_str}
+                \nDagster Traceback:"""
+                raise Failure(description=error)
+            else:
+                error = f"The meltano elt failed with code {return_code}. See logs for more information."
+                raise Failure(description=error)
         else:
             log.info(f"Meltano exited with return code {return_code}")
