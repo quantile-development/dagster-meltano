@@ -5,4 +5,5 @@ dist/
 .env
 .meltano
 .vscode
+build/
 meltano/load/sample.jsonl
