@@ -1,19 +1,60 @@
 version: 1
-send_anonymous_usage_stats: true
+default_environment: dev
+send_anonymous_usage_stats: false
 project_id: 315567d7-95e5-463a-aeb1-343fa09e2e5c
 plugins:
   extractors:
-  - name: tap-csv
-    variant: meltanolabs
-    pip_url: git+https://github.com/MeltanoLabs/tap-csv.git
-    config:
-      files:
-        - entity: "sample"
-          path: extract/sample.csv
-          keys: ["id"]
+    - name: tap-csv
+      variant: meltanolabs
+      pip_url: git+https://github.com/MeltanoLabs/tap-csv.git
+      config:
+        files:
+          - entity: "sample"
+            path: extract/sample.csv
+            keys: ["id"]
+
   loaders:
-  - name: target-jsonl
-    variant: andyh1203
-    pip_url: target-jsonl
-    config:
-      destination_path: load
+    - name: target-postgres
+      variant: transferwise
+      pip_url: pipelinewise-target-postgres
+      config:
+        dbname: postgres
+        user: postgres
+        password: postgres
+        host: postgres
+
+  transformers:
+    - name: dbt-postgres
+      variant: dbt-labs
+      pip_url: dbt-core~=1.1.0 dbt-postgres~=1.1.0
+      env:
+        DBT_PROFILES_DIR: /workspace/transform/profiles
+      config:
+        host: postgres
+        database: postgres
+        user: postgres
+        password: postgres
+        port: 5432
+        schema: public
+
+  utilities:
+    - name: dagit
+      namespace: dagit
+      pip_url: dagit>1.0 -e ..
+      executable: dagit
+      commands:
+        up: -f /workspace/meltano/orchestrate/repository.py
+      env:
+        DAGSTER_HOME: /tmp
+        DBT_POSTGRES_HOST: postgres
+        DBT_POSTGRES_USER: postgres
+        DBT_POSTGRES_PASSWORD: postgres
+        DBT_POSTGRES_PORT: "5432"
+        DBT_POSTGRES_DBNAME: postgres
+        DBT_POSTGRES_SCHEMA: public
+        DBT_PROFILES_DIR: /workspace/transform/profiles
+
+environments:
+  - name: dev
+  - name: ci
+  - name: prod

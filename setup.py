@@ -5,10 +5,10 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="dagster-meltano",
-    version="0.0.3",
+    version="1.0.0",
     author="Jules Huisman",
     author_email="jules.huisman@quantile.nl",
-    description="A Dagster plugin that allows you to run Meltano in Dagster",
+    description="A dagster plugin that allows you to run integrate your Meltano project inside Dagster.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/quantile-development/dagster-meltano",
@@ -20,16 +20,15 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    extras_require={
-        "development": [
-            "pytest==6.2",
-            "meltano==1.94",
-            "dagit==0.13",
-            "black",
-            "isort",
-            "pylint",
-        ]
-    },
-    packages=["dagster_meltano"],
+    install_requires=[
+        "dagster",
+        "dagster-pandas",
+        "pandas",
+        "requests",
+        "attrs",
+        "agate",
+        "meltano>2.4,<=2.5",
+    ],
+    packages=["dagster_meltano", "dagster_dbt"],
     python_requires=">=3.6",
 )

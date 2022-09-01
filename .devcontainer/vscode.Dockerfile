@@ -1,0 +1,1 @@
+FROM quantiledevelopment/vscode-python-azure:3.9

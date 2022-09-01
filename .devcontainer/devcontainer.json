@@ -1,8 +1,8 @@
 {
     "name": "dagster-meltano",
-    "build": {
-        "dockerfile": "../Dockerfile"
-    },
+    "dockerComposeFile": "docker-compose.yaml",
+    "service": "vscode",
+    "shutdownAction": "stopCompose",
     "extensions": [
         "ms-python.vscode-pylance",
         "njpwerner.autodocstring",
@@ -14,7 +14,8 @@
         "esbenp.prettier-vscode",
         "waderyan.gitblame"
     ],
-    "postCreateCommand": "cd meltano && meltano install",
+    "workspaceFolder": "/workspace",
+    "postCreateCommand": "pip install -r requirements.txt",
     "settings": {
         "python.defaultInterpreterPath": "/usr/local/bin/python",
         "python.linting.ignorePatterns": [
