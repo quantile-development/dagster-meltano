@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 from dagster import AssetMaterialization, execute_solid
 
-from dagster_meltano.solids import MeltanoEltSolid
+from dagster_meltano.ops import MeltanoEltSolid
 
 os.environ["MELTANO_PROJECT_ROOT"] = (Path(__file__).parents[2] / "meltano").__str__()
 

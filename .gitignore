@@ -3,7 +3,6 @@
 dist/
 .idea
 .env
-.meltano
-.vscode
+**/.meltano/
 build/
 meltano/load/sample.jsonl

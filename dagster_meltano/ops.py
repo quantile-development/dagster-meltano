@@ -3,17 +3,70 @@ from typing import Any, Dict, List
 from dagster import (
     AssetMaterialization,
     Field,
+    In,
     InputDefinition,
     Nothing,
+    OpExecutionContext,
     Optional,
+    Out,
     OutputDefinition,
     Permissive,
     SolidDefinition,
     SolidExecutionContext,
+    op,
 )
 
 from dagster_meltano.dagster_types import MeltanoEltArgsType, MeltanoEnvVarsType
 from dagster_meltano.meltano_elt import MeltanoELT
+
+
+@op(
+    ins={
+        "after": In(Nothing),
+    },
+    out={
+        "before": Out(Nothing),
+    },
+    config_schema={
+        "tap": Field(
+            str,
+            is_required=False,
+            description="The singer tap that extracts the data.",
+        ),
+        "target": Field(
+            str,
+            is_required=False,
+            description="The singer target that stores the data.",
+        ),
+        "job_id": Field(
+            str,
+            is_required=False,
+            description="The meltano job id, used for incremental replication.",
+        ),
+        "env_vars": Field(
+            Permissive({}),
+            is_required=False,
+            description="Inject custom environment variables into the Meltano elt process.",
+        ),
+        "tap_config": Field(
+            Permissive({}),
+            is_required=False,
+            description="Overwrite the tap configuration.",
+        ),
+        "target_config": Field(
+            Permissive({}),
+            is_required=False,
+            description="Overwrite the target configuration.",
+        ),
+        "full_refresh": Field(
+            bool,
+            is_required=False,
+            description="Whether to overwrite all existing data or not.",
+        ),
+    },
+)
+def meltano_op(context: OpExecutionContext):
+    print("hello world")
 
 
 class MeltanoEltSolid:

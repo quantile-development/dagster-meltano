@@ -21,7 +21,14 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     extras_require={
-        "development": ["pytest==6.2", "meltano==1.85", "dagit==0.13", "black", "isort", "pylint"]
+        "development": [
+            "pytest==6.2",
+            "meltano==1.94",
+            "dagit==0.13",
+            "black",
+            "isort",
+            "pylint",
+        ]
     },
     packages=["dagster_meltano"],
     python_requires=">=3.6",

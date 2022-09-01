@@ -5,9 +5,13 @@
     },
     "extensions": [
         "ms-python.vscode-pylance",
-        "mechatroner.rainbow-csv",
         "njpwerner.autodocstring",
-        "github.autopilot",
+        "github.copilot",
+        "zhuangtongfa.material-theme",
+        "bungcip.better-toml",
+        "redhat.vscode-yaml",
+        "4ops.terraform",
+        "esbenp.prettier-vscode",
         "waderyan.gitblame"
     ],
     "postCreateCommand": "cd meltano && meltano install",
@@ -25,7 +29,9 @@
             "**/CVS": true,
             "**/.DS_Store": true,
             "**/__pycache__": true,
-            ".pytest_cache": true
+            ".pytest_cache": true,
+            "**.egg-info": true,
+            "build": true
         },
         "python.testing.unittestEnabled": false,
         "python.testing.pytestEnabled": true,
@@ -35,11 +41,15 @@
             "--line-length",
             "100",
             "-S",
-            "--fast",
+            "--fast"
         ],
         "python.linting.enabled": true,
         "python.linting.pylintEnabled": true,
         "python.linting.lintOnSave": true,
+        "python.linting.pylintArgs": [
+            "--rcfile",
+            "${workspaceFolder}/.pylintrc"
+        ],
         "python.sortImports.args": [
             "--profile",
             "black"
@@ -54,7 +64,7 @@
             "statusBar.foreground": "#cbcbda",
             "statusBarItem.hoverBackground": "#1f238d",
             "statusBarItem.remoteBackground": "#3438bf",
-            "statusBarItem.remoteForeground": "#e3e3eb",
+            "statusBarItem.remoteForeground": "#e3e3eb"
         }
     }
 }
