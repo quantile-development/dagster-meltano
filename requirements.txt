@@ -1,3 +1,4 @@
 -e .
 pylint
 black
+ipykernel
