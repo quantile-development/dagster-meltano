@@ -6,6 +6,7 @@ services:
     tty: true
     volumes:
       - ..:/workspace:cached
+      - pip-cache:/root/.cache/pip
 
   postgres:
     image: postgres:14
@@ -21,3 +22,4 @@ services:
 
 volumes:
   postgres:
+  pip-cache:
