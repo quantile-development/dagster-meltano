@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 from dataclasses import dataclass
 
-from .logger import add_repeat_logger
+from .logger import add_repeat_handler
 
 
 @dataclass
@@ -104,7 +104,7 @@ def extract_load_factory(
                 config.state_suffix,
             )
 
-        add_repeat_logger(
+        repeat_handler = add_repeat_handler(
             logger=logging.getLogger("meltano"),
             dagster_logger=log,
         )
@@ -143,7 +143,15 @@ def extract_load_factory(
                 )
             )
 
+        record_counts = repeat_handler.metrics.record_counts
+
         for stream_name in context.selected_output_names:
-            yield Output(value=None, output_name=stream_name)
+            yield Output(
+                value=None,
+                output_name=stream_name,
+                metadata={
+                    "Records extracted": record_counts[stream_name],
+                },
+            )
 
     return extract_load

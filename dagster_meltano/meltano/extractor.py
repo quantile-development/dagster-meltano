@@ -1,23 +1,10 @@
 from __future__ import annotations
 
 import asyncio
-import logging
 from contextlib import closing
-from datetime import datetime
 from typing import TYPE_CHECKING
 
-from dagster import (
-    AssetKey,
-    AssetsDefinition,
-    Nothing,
-    OpExecutionContext,
-    Out,
-    Output,
-    multi_asset,
-)
-from meltano.cli.elt import _elt_context_builder, _run_extract_load
-from meltano.core.job import Job
-from meltano.core.logging import JobLoggingService, OutputLogger
+from dagster import AssetKey, AssetsDefinition, Nothing, Out, multi_asset
 from meltano.core.plugin import PluginDefinition
 from meltano.core.plugin.singer.catalog import SelectionType
 from meltano.core.select_service import SelectService
