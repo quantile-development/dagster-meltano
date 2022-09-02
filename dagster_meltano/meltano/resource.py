@@ -1,6 +1,6 @@
 import logging
 import os
-from functools import cache
+from functools import lru_cache
 from typing import Dict, List, Optional
 
 from dagster import resource
@@ -21,7 +21,7 @@ class MeltanoResource(metaclass=Singleton):
         setup_logging(self.project)
 
     @property
-    @cache
+    @lru_cache
     def session(self):
         return project_engine(self.project)[1]
 
