@@ -9,7 +9,10 @@ plugins:
       pip_url: git+https://github.com/MeltanoLabs/tap-csv.git
       config:
         files:
-          - entity: "sample"
+          - entity: "sample_one"
+            path: extract/sample.csv
+            keys: ["id"]
+          - entity: "sample_two"
             path: extract/sample.csv
             keys: ["id"]
 

@@ -22,8 +22,12 @@ from meltano.core.plugin import PluginDefinition
 from meltano.core.plugin.singer.catalog import SelectionType
 from meltano.core.select_service import SelectService
 
+from ..utils import generate_dagster_name
+
 if TYPE_CHECKING:
     from .resource import MeltanoResource
+
+from .extract_load import extract_load_factory
 
 
 def run_streams(context: OpExecutionContext):
@@ -101,7 +105,7 @@ class Extractor:
         """
         Generate a dagster safe name (^[A-Za-z0-9_]+$.)
         """
-        return self.name.replace("-", "_").replace(" ", "_")
+        return generate_dagster_name(self.name)
 
     @property
     def select_service(self) -> SelectService:
@@ -131,6 +135,15 @@ class Extractor:
             for stream in self.streams
         }
 
+        loader_name = "target-postgres"
+
+        extract_load_op = extract_load_factory(
+            name=f"{self.dagster_name}_{generate_dagster_name(loader_name)}",
+            extractor_name=self.name,
+            loader_name="target-postgres",
+            outs=outs,
+        )
+
         return multi_asset(
             name=self.dagster_name,
             ins={},
@@ -139,4 +152,4 @@ class Extractor:
             compute_kind="singer",
             group_name=self.dagster_name,
             required_resource_keys={"meltano"},
-        )(run_streams)
+        )(extract_load_op)
