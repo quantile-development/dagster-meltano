@@ -1,0 +1,42 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "meltano-install",
+        "type": "shell",
+        "command": "meltano",
+        "args": [
+          "install"
+        ],
+        "options": {
+          "cwd": "${workspaceFolder}/meltano"
+        },
+        "isBackground": true,
+        "presentation": {
+          "reveal": "always",
+          "panel": "shared",
+          "close": true
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "dagit-up",
+        "type": "shell",
+        "command": "meltano",
+        "args": [
+          "run",
+          "dagit:up"
+        ],
+        "options": {
+          "cwd": "${workspaceFolder}/meltano"
+        },
+        "isBackground": true,
+        "presentation": {
+          "reveal": "always",
+          "panel": "shared",
+          "close": true
+        },
+        "problemMatcher": []
+      }
+    ]
+  }

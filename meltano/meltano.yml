@@ -26,9 +26,9 @@ plugins:
   transformers:
     - name: dbt-postgres
       variant: dbt-labs
-      pip_url: dbt-core~=1.1.0 dbt-postgres~=1.1.0
+      pip_url: dbt-postgres~=1.2.0
       env:
-        DBT_PROFILES_DIR: /workspace/transform/profiles
+        DBT_PROFILES_DIR: /workspace/meltano/transform/profiles
       config:
         host: postgres
         database: postgres
