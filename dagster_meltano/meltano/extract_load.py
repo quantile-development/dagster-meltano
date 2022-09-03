@@ -62,7 +62,7 @@ def extract_load_factory(
         meltano_resource: MeltanoResource = context.resources.meltano
         environment = "dev"
 
-        full_refresh = context.op_config.get("full_refresh", False)
+        full_refresh = context.op_config["full_refresh"]
         state_suffix = context.op_config.get("state_suffix", None)
         state_id = context.op_config.get(
             "state_id",

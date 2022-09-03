@@ -1,2 +1,2 @@
 SELECT COUNT(*) AS count 
-FROM {{ source("tap_csv", "sample_one") }}
+FROM {{ source("tap_csv", "sample") }}
