@@ -1,59 +1,71 @@
 {
-  "name": "dagster-meltano",
-  "dockerComposeFile": "docker-compose.yaml",
-  "service": "vscode",
-  "shutdownAction": "stopCompose",
-  "extensions": [
-    "ms-python.vscode-pylance",
-    "njpwerner.autodocstring",
-    "zhuangtongfa.material-theme",
-    "bungcip.better-toml",
-    "redhat.vscode-yaml",
-    "4ops.terraform",
-    "esbenp.prettier-vscode",
-    "waderyan.gitblame"
-  ],
-  "workspaceFolder": "/workspace",
-  "postCreateCommand": "pip install -r requirements.txt",
-  "settings": {
-    "python.defaultInterpreterPath": "/usr/local/bin/python",
-    "python.linting.ignorePatterns": [
-      ".vscode/*.py",
-      "**/site-packages/**/*.py",
-      ".meltano"
+    "name": "dagster-meltano",
+    "dockerComposeFile": "docker-compose.yaml",
+    "service": "vscode",
+    "shutdownAction": "stopCompose",
+    "extensions": [
+        "ms-python.vscode-pylance",
+        "njpwerner.autodocstring",
+        "github.copilot",
+        "zhuangtongfa.material-theme",
+        "bungcip.better-toml",
+        "redhat.vscode-yaml",
+        "4ops.terraform",
+        "esbenp.prettier-vscode",
+        "waderyan.gitblame"
     ],
-    "files.exclude": {
-      "**/.git": true,
-      "**/.svn": true,
-      "**/.hg": true,
-      "**/CVS": true,
-      "**/.DS_Store": true,
-      "**/__pycache__": true,
-      ".pytest_cache": true,
-      "**.egg-info": true,
-      "build": true
-    },
-    "python.testing.unittestEnabled": false,
-    "python.testing.pytestEnabled": true,
-    "editor.formatOnSave": true,
-    "python.formatting.provider": "black",
-    "python.formatting.blackArgs": ["--line-length", "100", "-S", "--fast"],
-    "python.linting.enabled": true,
-    "python.linting.pylintEnabled": true,
-    "python.linting.lintOnSave": true,
-    "python.linting.pylintArgs": ["--rcfile", "${workspaceFolder}/.pylintrc"],
-    "python.sortImports.args": ["--profile", "black"],
-    "[python]": {
-      "editor.codeActionsOnSave": {
-        "source.organizeImports": true
-      }
-    },
-    "workbench.colorCustomizations": {
-      "statusBar.background": "#3438bf",
-      "statusBar.foreground": "#cbcbda",
-      "statusBarItem.hoverBackground": "#1f238d",
-      "statusBarItem.remoteBackground": "#3438bf",
-      "statusBarItem.remoteForeground": "#e3e3eb"
+    "workspaceFolder": "/workspace",
+    "postCreateCommand": "pip install -r requirements.txt",
+    "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.linting.ignorePatterns": [
+            ".vscode/*.py",
+            "**/site-packages/**/*.py",
+            ".meltano"
+        ],
+        "files.exclude": {
+            "**/.git": true,
+            "**/.svn": true,
+            "**/.hg": true,
+            "**/CVS": true,
+            "**/.DS_Store": true,
+            "**/__pycache__": true,
+            ".pytest_cache": true,
+            "**.egg-info": true,
+            "build": true
+        },
+        "python.testing.unittestEnabled": false,
+        "python.testing.pytestEnabled": true,
+        "editor.formatOnSave": true,
+        "python.formatting.provider": "black",
+        "python.formatting.blackArgs": [
+            "--line-length",
+            "100",
+            "-S",
+            "--fast"
+        ],
+        "python.linting.enabled": true,
+        "python.linting.pylintEnabled": true,
+        "python.linting.lintOnSave": true,
+        "python.linting.pylintArgs": [
+            "--rcfile",
+            "${workspaceFolder}/.pylintrc"
+        ],
+        "python.sortImports.args": [
+            "--profile",
+            "black"
+        ],
+        "[python]": {
+            "editor.codeActionsOnSave": {
+                "source.organizeImports": true
+            }
+        },
+        "workbench.colorCustomizations": {
+            "statusBar.background": "#3438bf",
+            "statusBar.foreground": "#cbcbda",
+            "statusBarItem.hoverBackground": "#1f238d",
+            "statusBarItem.remoteBackground": "#3438bf",
+            "statusBarItem.remoteForeground": "#e3e3eb"
+        }
     }
-  }
 }
