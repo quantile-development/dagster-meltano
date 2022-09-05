@@ -9,10 +9,13 @@ from meltano.core.logging.utils import setup_logging
 from meltano.core.plugin import PluginDefinition, PluginType
 from meltano.core.project import Project
 from meltano.core.project_plugins_service import ProjectPluginsService
+from meltano.core.task_sets import TaskSets
+from meltano.core.task_sets_service import TaskSetsService
 
 from dagster_meltano.utils import Singleton
 
 from .extractor import Extractor
+from .job import Job
 
 
 class MeltanoResource(metaclass=Singleton):
@@ -36,6 +39,18 @@ class MeltanoResource(metaclass=Singleton):
     @property
     def extractors(self) -> List[Extractor]:
         return [Extractor(extractor, self) for extractor in self.plugins.get(PluginType.EXTRACTORS)]
+
+    @property
+    def tasks_service(self) -> List[TaskSetsService]:
+        return TaskSetsService(self.project)
+
+    @property
+    def task_sets(self) -> List[TaskSets]:
+        return self.tasks_service.list()
+
+    @property
+    def jobs(self) -> List[Job]:
+        return [Job(task_set, self) for task_set in self.task_sets]
 
 
 @resource
