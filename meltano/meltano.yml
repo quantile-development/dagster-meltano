@@ -57,10 +57,14 @@ plugins:
         DBT_POSTGRES_SCHEMA: public
         DBT_PROFILES_DIR: /workspace/transform/profiles
 
-# jobs:
-#   - name: tap-csv-to-target-postgres
-#     tasks:
-#       - tap-csv target-postgres
+jobs:
+  - name: tap-csv-to-target-postgres
+    tasks:
+      - tap-csv target-postgres
+      - tap-csv target-snowflake
+  - name: tap-something-to-target-somewhere
+    tasks:
+      - tap-something target-somewhere
 
 # schedules:
 #   - name: tap-csv-to-target-postgres-schedule
