@@ -1,6 +1,7 @@
 import logging
 from dataclasses import dataclass, field
 from json import JSONDecoder
+from typing import Dict
 
 from dagster import LoggerDefinition
 
@@ -28,6 +29,11 @@ def extract_json_objects(text, decoder=JSONDecoder()):
 @dataclass
 class Metrics:
     record_counts: dict = field(default_factory=dict)
+    request_durations: Dict[str, list] = field(default_factory=dict)
+
+    @staticmethod
+    def mean(items) -> float:
+        return sum(items) / len(items)
 
 
 class RepeatHandler(logging.Handler):
@@ -49,14 +55,23 @@ class RepeatHandler(logging.Handler):
             for json in extract_json_objects(message):
                 self.dagster_logger.debug(json)
 
+                tags = json.get("tags", {})
+                stream_name = tags.get("stream") or tags.get("endpoint")
+
                 # TODO: Move to a more well-designed system
                 if json.get("metric") == "record_count":
-                    stream_name = json.get("tags", {}).get("stream")
                     record_count = json.get("value", 0)
                     if stream_name:
                         self.metrics.record_counts[stream_name] = (
                             self.metrics.record_counts.get(stream_name, 0) + record_count
                         )
+
+                if json.get("metric") == "http_request_duration":
+                    request_duration = json.get("value", 0.0)
+                    if stream_name:
+                        self.metrics.request_durations[
+                            stream_name
+                        ] = self.metrics.request_durations.get(stream_name, []) + [request_duration]
 
 
 def add_repeat_handler(logger, dagster_logger) -> RepeatHandler:

@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 from dataclasses import dataclass
 
-from .logger import add_repeat_handler
+from .logger import Metrics, add_repeat_handler
 
 
 @dataclass
@@ -39,7 +39,7 @@ def generate_state_id(
     return state_id
 
 
-def load_config(context: OpExecutionContext) -> Config:
+def load_config_from_dagster(context: OpExecutionContext) -> Config:
     """
     If no config was provided the `op_config` value is None.
     In this case we create a Config instance with default values.
@@ -92,9 +92,7 @@ def extract_load_factory(
         meltano_resource: MeltanoResource = context.resources.meltano
         environment = meltano_resource.environment
 
-        log.info(context)
-
-        config = load_config(context)
+        config = load_config_from_dagster(context)
 
         if config.state_id == None:
             config.state_id = generate_state_id(
@@ -110,6 +108,7 @@ def extract_load_factory(
         )
 
         select_filter = list(context.selected_output_names)
+        log.debug(f"Selected the following streams: {select_filter}")
 
         job = Job(job_name=config.state_id)
 
@@ -132,7 +131,7 @@ def extract_load_factory(
             log_file = job_logging_service.generate_log_name(job.job_name, job.run_id)
             output_logger = OutputLogger(log_file)
 
-            log.debug(f"Logging to {log_file}")
+            log.debug(f"Logging to file: {log_file}")
 
             loop = asyncio.get_event_loop()
             loop.run_until_complete(
@@ -144,14 +143,21 @@ def extract_load_factory(
             )
 
         record_counts = repeat_handler.metrics.record_counts
+        request_durations = repeat_handler.metrics.request_durations
 
         for stream_name in context.selected_output_names:
+            metadata = {}
+
+            if stream_name in record_counts:
+                metadata["Records extracted"] = record_counts[stream_name]
+
+            if stream_name in request_durations:
+                metadata["Average request duration"] = Metrics.mean(request_durations[stream_name])
+
             yield Output(
                 value=None,
                 output_name=stream_name,
-                metadata={
-                    "Records extracted": record_counts[stream_name],
-                },
+                metadata=metadata,
             )
 
     return extract_load
