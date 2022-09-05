@@ -66,10 +66,10 @@ jobs:
     tasks:
       - tap-something target-somewhere
 
-# schedules:
-#   - name: tap-csv-to-target-postgres-schedule
-#     job: tap-csv-to-target-postgres
-#     interval: "@hourly"
+schedules:
+  - name: tap-csv-to-target-postgres-schedule
+    job: tap-csv-to-target-postgres
+    interval: "@daily"
   
 environments:
   - name: dev

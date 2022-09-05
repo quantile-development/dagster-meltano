@@ -19,6 +19,9 @@ class Job:
 
     @property
     def name(self) -> str:
+        """
+        The job name as specified in the Meltano project..
+        """
         return self.job.name
 
     @property
@@ -31,7 +34,7 @@ class Job:
     @property
     def create_dagster_op(self) -> OpDefinition:
         """
-        Generates a dagster op for each task in the meltano job.
+        Generates a dagster op for the meltano job.
         """
 
         @op(name=f"run_{self.dagster_name}")
@@ -41,7 +44,11 @@ class Job:
         return dagster_op
 
     @property
-    def create_dagster_job(self) -> JobDefinition:
+    def dagster_job(self) -> JobDefinition:
+        """
+        Generates a dagster job using the dagster op.
+        """
+
         @job(name=self.dagster_name)
         def dagster_job():
             self.create_dagster_op()

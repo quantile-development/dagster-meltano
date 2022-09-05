@@ -9,6 +9,8 @@ from meltano.core.logging.utils import setup_logging
 from meltano.core.plugin import PluginDefinition, PluginType
 from meltano.core.project import Project
 from meltano.core.project_plugins_service import ProjectPluginsService
+from meltano.core.schedule import Schedule
+from meltano.core.schedule_service import ScheduleService
 from meltano.core.task_sets import TaskSets
 from meltano.core.task_sets_service import TaskSetsService
 
@@ -51,6 +53,17 @@ class MeltanoResource(metaclass=Singleton):
     @property
     def jobs(self) -> List[Job]:
         return [Job(task_set, self) for task_set in self.task_sets]
+
+    @property
+    def schedule_service(self) -> ScheduleService:
+        return ScheduleService(self.project)
+
+    @property
+    def schedules(self) -> List[Schedule]:
+        """
+        Returns a list of job schedules found in the meltano project.
+        """
+        return self.schedule_service.schedules()
 
 
 @resource
