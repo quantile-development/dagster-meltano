@@ -1,9 +1,8 @@
-import logging
 import os
 from functools import lru_cache
-from typing import Dict, List, Optional
+from typing import Dict, Iterable, List, Optional, Union
 
-from dagster import resource
+from dagster import JobDefinition, ScheduleDefinition, resource
 from meltano.core.db import project_engine
 from meltano.core.logging.utils import setup_logging
 from meltano.core.plugin import PluginDefinition, PluginType
@@ -40,6 +39,14 @@ class MeltanoResource(metaclass=Singleton):
         return ProjectPluginsService(self.project)
 
     @property
+    def tasks_service(self) -> List[TaskSetsService]:
+        return TaskSetsService(self.project)
+
+    @property
+    def schedule_service(self) -> ScheduleService:
+        return ScheduleService(self.project)
+
+    @property
     def plugins(self) -> Dict[PluginType, List[PluginDefinition]]:
         return self.plugins_service.plugins_by_type()
 
@@ -48,31 +55,26 @@ class MeltanoResource(metaclass=Singleton):
         return [Extractor(extractor, self) for extractor in self.plugins.get(PluginType.EXTRACTORS)]
 
     @property
-    def tasks_service(self) -> List[TaskSetsService]:
-        return TaskSetsService(self.project)
-
-    @property
     def task_sets(self) -> List[TaskSets]:
         return self.tasks_service.list()
 
     @property
-    def jobs(self) -> List[Job]:
-        return [Job(task_set, self) for task_set in self.task_sets]
+    def schedules(self) -> Dict[str, Schedule]:
+        """
+        Returns a dictionary with Meltano job names mapped to Meltano schedules
+        """
+        return {schedule.job: schedule for schedule in self.schedule_service.schedules()}
 
     @property
-    def schedule_service(self) -> ScheduleService:
-        return ScheduleService(self.project)
+    def jobs(self) -> Iterable[Union[JobDefinition, ScheduleDefinition]]:
+        for task_set in self.task_sets:
+            job = Job(task_set, meltano=self)
+            yield job.dagster_job
 
-    @property
-    def schedules(self) -> List[Schedule]:
-        """
-        Returns a list of job schedules found in the meltano project.
-        """
-        return self.schedule_service.schedules()
+            if job.dagster_schedule:
+                yield job.dagster_schedule
 
 
 @resource
-def meltano_resource(init_context):
-    logging.info("init_context =======================================")
-    logging.info(init_context)
+def meltano_resource():
     return MeltanoResource()
