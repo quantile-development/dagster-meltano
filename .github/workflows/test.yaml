@@ -1,9 +1,10 @@
 name: test
-on: 
+on:
   pull_request:
     paths:
-      - 'dagster_meltano/**'
-      - 'tests/**'
+      # - 'dagster_meltano/**'
+      # - 'tests/**'
+      - "xxx"
 
 jobs:
   test:
@@ -22,6 +23,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install ".[development]"
+
       - name: Run test suite
         run: |
           cd meltano/
