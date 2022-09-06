@@ -1,26 +1,24 @@
-import os
-from functools import lru_cache
-from typing import List, Optional
+from functools import cache
+from typing import List, Optional, Union
 
-from dagster import DefaultScheduleStatus, JobDefinition, ScheduleDefinition, job, op
+from dagster import JobDefinition, ScheduleDefinition
+
+from .meltano.resource import MeltanoResource
 
 
-@lru_cache
+@cache
 def load_jobs_from_meltano_project(
     project_dir: Optional[str],
-) -> List[JobDefinition]:
-    @op
-    def run_tap_csv_to_target_postgres():
-        os.system('meltano run tap-csv-to-target-postgres')
+) -> List[Union[JobDefinition, ScheduleDefinition]]:
+    """This function generates dagster jobs for all jobs defined in the Meltano project. If there are schedules connected
+    to the jobs, it also returns those.
 
-    @job
-    def tap_csv_to_target_postgres():
-        run_tap_csv_to_target_postgres()
+    Args:
+        project_dir (Optional[str], optional): The location of the Meltano project. Defaults to os.getenv("MELTANO_PROJECT_ROOT").
 
-    tap_csv_to_target_postgres_schedule = ScheduleDefinition(
-        job=tap_csv_to_target_postgres,
-        cron_schedule="@hourly",
-        default_status=DefaultScheduleStatus.RUNNING,
-    )
+    Returns:
+        List[Union[JobDefinition, ScheduleDefinition]]: Returns a list of either Dagster JobDefinitions or ScheduleDefinitions
+    """
 
-    return [tap_csv_to_target_postgres, tap_csv_to_target_postgres_schedule]
+    meltano_resource = MeltanoResource(project_dir)
+    return list(meltano_resource.jobs)
