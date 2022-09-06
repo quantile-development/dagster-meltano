@@ -1,5 +1,4 @@
 from dagster import repository, with_resources
-
 from dagster_meltano import (
     load_assets_from_meltano_project,
     load_job_schedules_from_meltano_project,

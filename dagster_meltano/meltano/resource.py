@@ -26,6 +26,11 @@ class MeltanoResource(metaclass=Singleton):
         setup_logging(self.project)
 
     @property
+    def environment(self) -> str:
+        # TODO: replace with dynamic value
+        return "dev"
+
+    @property
     @lru_cache
     def session(self):
         return project_engine(self.project)[1]

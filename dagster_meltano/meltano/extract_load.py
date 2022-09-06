@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from contextlib import closing
-from typing import TYPE_CHECKING, Dict
+from typing import TYPE_CHECKING, Dict, Optional
 
 from dagster import Field, OpExecutionContext, Out, Output, op
 from meltano.cli.elt import _elt_context_builder, _run_extract_load
@@ -12,6 +12,17 @@ from meltano.core.logging import JobLoggingService, OutputLogger
 
 if TYPE_CHECKING:
     from .resource import MeltanoResource
+
+from dataclasses import dataclass
+
+from .logger import Metrics, add_repeat_handler
+
+
+@dataclass
+class Config:
+    full_refresh: str = False
+    state_suffix: Optional[str] = None
+    state_id: Optional[str] = None
 
 
 def generate_state_id(
@@ -26,6 +37,25 @@ def generate_state_id(
         state_id += f":{suffix}"
 
     return state_id
+
+
+def load_config_from_dagster(context: OpExecutionContext) -> Config:
+    """
+    If no config was provided the `op_config` value is None.
+    In this case we create a Config instance with default values.
+    """
+    if context.op_config == None:
+        return Config()
+
+    full_refresh = context.op_config.get("full_refresh", False)
+    state_suffix = context.op_config.get("state_suffix", None)
+    state_id = context.op_config.get("state_id", None)
+
+    return Config(
+        full_refresh=full_refresh,
+        state_suffix=state_suffix,
+        state_id=state_id,
+    )
 
 
 def extract_load_factory(
@@ -60,26 +90,27 @@ def extract_load_factory(
     def extract_load(context: OpExecutionContext):
         log = context.log
         meltano_resource: MeltanoResource = context.resources.meltano
-        environment = "dev"
+        environment = meltano_resource.environment
 
-        full_refresh = context.op_config.get("full_refresh", False)
-        state_suffix = context.op_config.get("state_suffix", None)
-        state_id = context.op_config.get(
-            "state_id",
-            generate_state_id(environment, extractor_name, loader_name, state_suffix),
+        config = load_config_from_dagster(context)
+
+        if config.state_id == None:
+            config.state_id = generate_state_id(
+                environment,
+                extractor_name,
+                loader_name,
+                config.state_suffix,
+            )
+
+        repeat_handler = add_repeat_handler(
+            logger=logging.getLogger("meltano"),
+            dagster_logger=log,
         )
 
-        class RepeatHandler(logging.Handler):
-            def emit(self, record):
-                if "event" in record.msg:
-                    log.info(record.msg["event"])
-
-        logging.getLogger("meltano").addHandler(RepeatHandler())
-
         select_filter = list(context.selected_output_names)
-        log.debug(f"Selected streams: {select_filter}")
+        log.debug(f"Selected the following streams: {select_filter}")
 
-        job = Job(job_name=state_id)
+        job = Job(job_name=config.state_id)
 
         with closing(meltano_resource.session()) as session:
             plugins_service = meltano_resource.plugins_service
@@ -90,7 +121,7 @@ def extract_load_factory(
                 extractor=extractor_name,
                 loader=loader_name,
                 transform="skip",
-                full_refresh=full_refresh,
+                full_refresh=config.full_refresh,
                 select_filter=select_filter,
                 plugins_service=plugins_service,
             ).context()
@@ -100,7 +131,7 @@ def extract_load_factory(
             log_file = job_logging_service.generate_log_name(job.job_name, job.run_id)
             output_logger = OutputLogger(log_file)
 
-            log.debug(f"Logging to {log_file}")
+            log.debug(f"Logging to file: {log_file}")
 
             loop = asyncio.get_event_loop()
             loop.run_until_complete(
@@ -111,7 +142,22 @@ def extract_load_factory(
                 )
             )
 
+        record_counts = repeat_handler.metrics.record_counts
+        request_durations = repeat_handler.metrics.request_durations
+
         for stream_name in context.selected_output_names:
-            yield Output(value=None, output_name=stream_name)
+            metadata = {}
+
+            if stream_name in record_counts:
+                metadata["Records extracted"] = record_counts[stream_name]
+
+            if stream_name in request_durations:
+                metadata["Average request duration"] = Metrics.mean(request_durations[stream_name])
+
+            yield Output(
+                value=None,
+                output_name=stream_name,
+                metadata=metadata,
+            )
 
     return extract_load

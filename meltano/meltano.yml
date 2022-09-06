@@ -9,13 +9,22 @@ plugins:
       pip_url: git+https://github.com/MeltanoLabs/tap-csv.git
       config:
         files:
-          - entity: "sample_one"
+          - entity: sample_one
             path: extract/sample.csv
-            keys: ["id"]
-          - entity: "sample_two"
+            keys: [id]
+          - entity: sample_two
             path: extract/sample.csv
-            keys: ["id"]
+            keys: [id]
 
+    - name: tap-github
+      variant: singer-io
+      pip_url: tap-github
+      select:
+        - "issues.*"
+      config:
+        repository: quantile-development/dagster-meltano
+        start_date: 2021-01-01
+        access_token: $TAP_GITHUB_ACCESS_TOKEN
   loaders:
     - name: target-postgres
       variant: transferwise
@@ -70,7 +79,7 @@ schedules:
   - name: tap-csv-to-target-postgres-schedule
     job: tap-csv-to-target-postgres
     interval: "@daily"
-  
+    
 environments:
   - name: dev
   - name: ci
