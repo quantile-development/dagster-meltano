@@ -14,8 +14,8 @@ def generate_dagster_name(string) -> str:
     return string.replace("-", "_").replace(" ", "_")
 
 
-def generate_meltano_name(string) -> str:
-    """
-    Reverses the `generate_dagster_name` function to generate meltano name.
-    """
-    return string.replace("_", "-").replace(" ", "-")
+def generate_dbt_group_name(node_info):
+    if len(node_info.get("fqn", [])) >= 3:
+        return "_".join(node_info["fqn"][1:-1])
+
+    return "dbt"

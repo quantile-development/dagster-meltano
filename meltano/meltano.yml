@@ -64,7 +64,7 @@ plugins:
         DBT_POSTGRES_PORT: "5432"
         DBT_POSTGRES_DBNAME: postgres
         DBT_POSTGRES_SCHEMA: public
-        DBT_PROFILES_DIR: /workspace/transform/profiles
+        # DBT_PROFILES_DIR: /workspace/transform/profiles
 
 jobs:
   - name: job-with-schedule

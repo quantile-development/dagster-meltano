@@ -27,8 +27,12 @@ setuptools.setup(
         "requests",
         "attrs",
         "agate",
-        "meltano>2.4,<=2.5",
     ],
+    extras_require={
+        "meltano": [
+            "meltano>2.4,<=2.5",
+        ],
+    },
     packages=["dagster_meltano", "dagster_dbt"],
     python_requires=">=3.6",
 )
