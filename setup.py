@@ -22,7 +22,6 @@ setuptools.setup(
     ],
     install_requires=[
         "dagster~=1.0.7",
-        "dagit~=1.0.7",
         "dagster-pandas~=0.16.7",
         "pandas~=1.4.4",
         "requests~=2.28.1",
