@@ -1,9 +1,9 @@
-import setuptools
+from setuptools import find_packages, setup
 
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
-setuptools.setup(
+setup(
     name="dagster-meltano",
     version="1.0.0",
     author="Jules Huisman",
@@ -33,6 +33,6 @@ setuptools.setup(
             "meltano>2.4,<=2.5",
         ],
     },
-    packages=["dagster_meltano", "dagster_dbt"],
+    packages=find_packages(exclude=["meltano"]),
     python_requires=">=3.6",
 )
