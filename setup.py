@@ -21,12 +21,12 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     install_requires=[
-        "dagster",
-        "dagster-pandas",
-        "pandas",
-        "requests",
-        "attrs",
-        "agate",
+        "dagster~=1.0.7",
+        "dagster-pandas~=0.16.7",
+        "pandas~=1.4.4",
+        "requests~=2.28.1",
+        "attrs~=22.1.0",
+        "agate~=1.6.3",
     ],
     extras_require={
         "meltano": [
