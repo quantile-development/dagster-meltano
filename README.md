@@ -1,7 +1,9 @@
-# Dagster-meltano (Under development)
+# Dagster-meltano (Archived)
+
+## This repository is no longer in use. If you want to use Meltano inside Dagster, check out the [dagster-ext](https://github.com/quantile-development/dagster-ext) repository.
+
 A dagster plugin that allows you to run Meltano pipelines using Dagster.
 
-[![Open in Visual Studio Code](https://open.vscode.dev/badges/open-in-vscode.svg)](https://open.vscode.dev/quantile-development/dagster-meltano)
 [![Downloads](https://pepy.tech/badge/dagster-meltano/month)](https://pepy.tech/project/dagster-meltano)
 
 ## Installation
