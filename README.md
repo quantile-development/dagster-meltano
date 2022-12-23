@@ -1,6 +1,6 @@
 # Dagster-meltano (Archived)
 
-## This repository is no longer in use. If you want to use Meltano inside Dagster, check out the [dagster-ext](https://github.com/quantile-development/dagster-ext) repository.
+## This repository is currently outdated. If you want to use Meltano inside Dagster, check out the [dagster-ext](https://github.com/quantile-development/dagster-ext) repository. Soon the `dagster_meltano` part of the `dagster-ext` will be extracted and placed in this repository.
 
 A dagster plugin that allows you to run Meltano pipelines using Dagster.
 
