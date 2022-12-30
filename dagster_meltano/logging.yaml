@@ -1,0 +1,29 @@
+version: 1
+disable_existing_loggers: false
+
+formatters:
+  default:
+    format: "%(message)s"
+  structured_plain:
+    (): meltano.core.logging.console_log_formatter
+    colors: False
+  structured_colored:
+    (): meltano.core.logging.console_log_formatter
+    colors: True
+  key_value:
+    (): meltano.core.logging.key_value_formatter
+    sort_keys: False
+  json:
+    (): meltano.core.logging.json_formatter
+
+handlers:
+  console:
+    class: logging.StreamHandler
+    level: INFO
+    formatter: json
+    stream: "ext://sys.stderr"
+
+root:
+  level: INFO
+  propagate: yes
+  handlers: [console]

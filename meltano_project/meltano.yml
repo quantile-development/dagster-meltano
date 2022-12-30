@@ -1,0 +1,35 @@
+version: 1
+default_environment: dev
+project_id: 1b791a52-034d-4c11-a000-ef0eeed7b573
+send_anonymous_usage_stats: false
+plugins:
+  extractors:
+    - name: tap-smoke-test
+      namespace: tap_smoke_test
+      pip_url: git+https://github.com/meltano/tap-smoke-test.git
+      config:
+        streams:
+          - stream_name: animals
+            input_filename: https://gitlab.com/meltano/tap-smoke-test/-/raw/main/demo-data/animals-data.jsonl
+  loaders:
+    - name: target-jsonl
+      variant: andyh1203
+      pip_url: target-jsonl
+      env:
+        MELTANO_LOAD_SCHEMA: TAP_CARBON_INTENSITY
+  utilities:
+    - name: dagster
+      variant: quantile-development
+      pip_url: git+https://github.com/quantile-development/dagster-ext.git -e ${MELTANO_PROJECT_ROOT}/..
+jobs:
+  - name: load-jobs
+    tasks:
+      - tap-smoke-test target-jsonl
+schedules:
+  - name: daily-load-jobs
+    interval: "@daily"
+    job: load-jobs
+environments:
+  - name: dev
+  - name: staging
+  - name: prod

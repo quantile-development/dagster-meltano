@@ -1,64 +1,49 @@
-# Dagster-meltano (Archived)
+# Dagster-meltano
 
-## This repository is currently outdated. If you want to use Meltano inside Dagster, check out the [dagster-ext](https://github.com/quantile-development/dagster-ext) repository. Soon the `dagster_meltano` part of the `dagster-ext` will be extracted and placed in this repository.
-
-A dagster plugin that allows you to run Meltano pipelines using Dagster.
+A dagster plugin that allows you to run Meltano using Dagster.
 
 [![Downloads](https://pepy.tech/badge/dagster-meltano/month)](https://pepy.tech/project/dagster-meltano)
 
 ## Installation
-1. Install using pip `pip install dagster-meltano`.
-2. Make sure you have an installed Meltano project.
-3. Point the plugin to the root of the Meltano project by defining `MELTANO_PROJECT_ROOT`.
 
-## Example
-An example of a Dagster pipeline that runs a Meltano elt process.
+You can install using `pip install dagster-meltano`.
+
+## Examples
+
+An example of automatically loading all jobs and schedules from your Meltano project.
 
 ```python
+from dagster import repository
+from dagster_meltano import load_jobs_from_meltano_project
 
-from dagster import OutputDefinition, Nothing
-from dagster_meltano.tests import pipeline
-from dagster_meltano.solids import meltano_elt_solid
+meltano_jobs = load_jobs_from_meltano_project("<path-to-meltano-root>")
 
-
-@pipeline
-def meltano_pipeline():
-    meltano_elt_solid(
-        output_defs=[OutputDefinition(dagster_type=Nothing)],
-        tap='tap-csv',
-        target='target-jsonl',
-        job_id='csv-to-jsonl'  # Optional
-    )
+@repository
+def repository():
+    return [meltano_jobs]
 ```
 
-## Development
-### Setup using VSCode
+An example of running a abitrary `meltano run` command.
+
+```python
+from dagster import repository, job
+from dagster_meltano import meltano_resource, meltano_run_op
+
+@job(resource_defs={"meltano": meltano_resource})
+def meltano_run_job():
+    tap_done = meltano_run_op("tap-1 target-1")()
+    meltano_run_op("tap-2 target-2")(tap_done)
+
+@repository()
+def repository():
+    return [meltano_run_job]
+```
+
+## Development using VSCode
+
 1. Open this repository in Visual Studio Code.
 2. Install the [Remote - Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) plugin for Visual Studio Code.
-3. Wait for the container setup, it should automatically install all Meltano plugins. 
-4. Open the integrated terminal and start Dagit `dagit -f dagster_meltano/tests/pipeline.py`
-4. Visit `localhost:3000` to access Dagit.
-
-### Setup using other IDEs
-1. Create a virtual environment
-2. Pip install dependencies: `pip install dagster meltano`
-3. Install Meltano plugins: `cd meltano && meltano install && cd ..`
-4. Set env vars: `export MELTANO_PROJECT_ROOT=<path/to/meltano>`
-5. Run dagit: `dagit -f dagster_meltano/tests/pipeline.py`
-
-## Testing and Linting
-We use [Dagster's default setup](https://docs.dagster.io/community/contributing#developing-dagster) 
-for testing and linting.
-
-### Linting
-Specifically linting can be accomplished by installing the appropriate linters:
-
-```shell
-pip install black pylint isort
-```
-
-And then running them against the codebase:
-
-```shell
-black dagster_meltano/ && isort dagster_meltano/ && pylint dagster_meltano/ 
-```
+3. Go to the example Meltano project root `cd meltano_project`
+4. Install all plugins `meltano install`
+5. Start dagit `meltano invoke dagster:start`
+6. Visit `localhost:3000` to access Dagit.

@@ -1,53 +1,23 @@
 {
-    "name": "dagster-meltano",
-    "build": {
-        "dockerfile": "../Dockerfile"
+  "name": "dagster-meltano",
+  "image": "ghcr.io/quantile-development/vscode-python-base:3.8",
+  "features": {
+    "ghcr.io/devcontainers-contrib/features/black:1": {},
+    "ghcr.io/devcontainers-contrib/features/isort:1": {},
+    "ghcr.io/devcontainers-contrib/features/meltano:1": {
+      "version": "2.12.0"
     },
-    "extensions": [
-        "ms-python.vscode-pylance",
-        "mechatroner.rainbow-csv",
-        "njpwerner.autodocstring",
-        "github.autopilot",
-        "waderyan.gitblame"
-    ],
-    "postCreateCommand": "cd meltano && meltano install",
-    "settings": {
-        "python.defaultInterpreterPath": "/usr/local/bin/python",
-        "python.linting.ignorePatterns": [
-            ".vscode/*.py",
-            "**/site-packages/**/*.py",
-            ".meltano"
-        ],
-        "files.exclude": {
-            "**/.git": true,
-            "**/.svn": true,
-            "**/.hg": true,
-            "**/CVS": true,
-            "**/.DS_Store": true,
-            "**/__pycache__": true,
-            ".pytest_cache": true
-        },
-        "python.testing.unittestEnabled": false,
-        "python.testing.pytestEnabled": true,
-        "editor.formatOnSave": true,
-        "python.formatting.provider": "black",
-        "python.formatting.blackArgs": [
-            "--line-length",
-            "100",
-            "-S",
-            "--fast",
-        ],
-        "python.linting.enabled": true,
-        "python.linting.pylintEnabled": true,
-        "python.linting.lintOnSave": true,
-        "python.sortImports.args": [
-            "--profile",
-            "black"
-        ],
-        "[python]": {
-            "editor.codeActionsOnSave": {
-                "source.organizeImports": true
-            }
-        }
-    }
+    "ghcr.io/devcontainers-contrib/features/poetry:1": {}
+  },
+  "extensions": [
+    "ms-python.vscode-pylance",
+    "njpwerner.autodocstring",
+    "zhuangtongfa.material-theme",
+    "bungcip.better-toml",
+    "redhat.vscode-yaml",
+    "waderyan.gitblame",
+    "esbenp.prettier-vscode"
+  ],
+  "postCreateCommand": "poetry config virtualenvs.in-project true && poetry install && git config --global --add safe.directory /workspaces/dagster-meltano",
+  "remoteUser": "root"
 }

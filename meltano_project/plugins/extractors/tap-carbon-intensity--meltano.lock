@@ -1,0 +1,17 @@
+{
+  "plugin_type": "extractors",
+  "name": "tap-carbon-intensity",
+  "namespace": "tap_carbon_intensity",
+  "variant": "meltano",
+  "label": "Carbon Emissions Intensity",
+  "docs": "https://hub.meltano.com/extractors/tap-carbon-intensity--meltano",
+  "repo": "https://gitlab.com/meltano/tap-carbon-intensity",
+  "pip_url": "git+https://gitlab.com/meltano/tap-carbon-intensity.git",
+  "description": "National Grid ESO's Carbon Emissions Intensity API",
+  "logo_url": "https://hub.meltano.com/assets/logos/extractors/carbon-intensity.png",
+  "capabilities": [
+    "discover",
+    "state",
+    "catalog"
+  ]
+}
