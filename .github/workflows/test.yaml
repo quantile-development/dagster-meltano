@@ -2,9 +2,6 @@ name: test
 on:
   pull_request:
 
-env:
-  MELTANO_PROJECT_ROOT: "/tests/meltano_test_project"
-
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -25,14 +22,16 @@ jobs:
       - name: Install Poetry
         run: pipx install poetry
 
-      - name: Install Meltano
-        run: pipx install meltano==2.12.0
-
       - name: Install Dependencies
         run: poetry install
 
+      - name: Install Meltano
+        run: pipx install meltano==2.12.0
+
       - name: Install Meltano plugins
-        run: meltano install
+        run: |
+          cd tests/meltano_test_project
+          meltano install
 
       - name: Run test suite
         run: poetry run pytest
