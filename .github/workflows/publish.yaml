@@ -1,0 +1,27 @@
+name: Publish
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v2
+
+      - name: Setup Python
+        uses: actions/setup-python@v4.3.0
+        with:
+          python-version: 3.8
+          architecture: x64
+          cache: "pip"
+          cache-dependency-path: "poetry.lock"
+
+      - name: Install Poetry
+        run: pipx install poetry
+
+      - name: Publish package
+        run: poetry publish --build --skip-existing --username ${{ secrets.PYPI_USERNAME }} --password ${{ secrets.PYPI_PASSWORD }}
