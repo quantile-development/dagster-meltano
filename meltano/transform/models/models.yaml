@@ -1,8 +1,0 @@
-version: 2
-
-models:
-  - name: count_rows
-    columns:
-      - name: count
-        tests:
-          - not_null

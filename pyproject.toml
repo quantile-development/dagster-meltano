@@ -1,26 +1,23 @@
-[build-system]
-requires = [
-    "setuptools>=42",
-    "wheel"
+[tool.poetry]
+name = "dagster-meltano"
+version = "1.0.0"
+description = "A dagster plugin that allows you to run your Meltano project inside Dagster."
+authors = ["Jules Huisman"]
+license = "Apache 2.0"
+packages = [
+    { include = "dagster_meltano" }
 ]
-build-backend = "setuptools.build_meta"
 
-[tool.black]
-line-length = 100
-exclude = '''
-/(
-    build
-  | buck-out
-  | dist
-  | _build
-  | \.eggs
-  | \.git
-  | \.hg
-  | \.mypy_cache
-  | \.nox
-  | \.tox
-  | \.venv
-  | snapshots
-)/
-'''
-target_version = ['py36', 'py37', 'py38', 'py39']
+[tool.poetry.dependencies]
+python = "<3.11,>=3.8"
+dagster = ">=1.0"
+
+[tool.poetry.group.dev.dependencies]
+pylint = "^2.15.9"
+
+[build-system]
+requires = ["poetry-core>=1.0.8"]
+build-backend = "poetry.core.masonry.api"
+
+[project.urls]
+Homepage = "https://github.com/quantile-development/dagster-meltano"

@@ -1,11 +1,10 @@
 from typing import List, Optional
 
 from dagster import AssetsDefinition
-
 from dagster_dbt import load_assets_from_dbt_project
 
-from .meltano.resource import MeltanoResource
-from .utils import generate_dbt_group_name
+# from dagster_meltano.meltano_resource import MeltanoResource
+# from .utils import generate_dbt_group_name
 
 
 def load_assets_from_meltano_project(
@@ -24,6 +23,7 @@ def load_assets_from_meltano_project(
     Returns:
         List[AssetsDefinition]: Returns a list of all Meltano assets
     """
+    return []
     meltano_resource = MeltanoResource(meltano_project_dir)
     meltano_assets = [extractor.asset for extractor in meltano_resource.extractors]
 

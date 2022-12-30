@@ -1,0 +1,30 @@
+version: 1
+default_environment: dev
+project_id: 1b791a52-034d-4c11-a000-ef0eeed7b573
+plugins:
+  extractors:
+    - name: tap-carbon-intensity
+      variant: meltano
+      pip_url: git+https://gitlab.com/meltano/tap-carbon-intensity.git
+  loaders:
+    - name: target-jsonl
+      variant: andyh1203
+      pip_url: target-jsonl
+      env:
+        MELTANO_LOAD_SCHEMA: TAP_CARBON_INTENSITY
+  utilities:
+    - name: dagster
+      variant: quantile-development
+      pip_url: git+https://github.com/quantile-development/dagster-ext.git -e ${MELTANO_PROJECT_ROOT}/..
+jobs:
+  - name: load-jobs
+    tasks:
+      - tap-carbon-intensity target-jsonl
+schedules:
+  - name: daily-load-jobs
+    interval: "@daily"
+    job: load-jobs
+environments:
+  - name: dev
+  - name: staging
+  - name: prod
