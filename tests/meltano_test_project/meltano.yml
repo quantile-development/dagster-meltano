@@ -15,12 +15,10 @@ plugins:
     - name: target-jsonl
       variant: andyh1203
       pip_url: target-jsonl
+      config:
+        destination_path: /tmp
       env:
         MELTANO_LOAD_SCHEMA: TAP_CARBON_INTENSITY
-  utilities:
-    - name: dagster
-      variant: quantile-development
-      pip_url: git+https://github.com/quantile-development/dagster-ext.git -e ${MELTANO_PROJECT_ROOT}/..
 jobs:
   - name: load-jobs
     tasks:

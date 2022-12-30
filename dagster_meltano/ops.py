@@ -1,12 +1,9 @@
 from __future__ import annotations
 
-import asyncio
-import json
 from functools import lru_cache
 from typing import TYPE_CHECKING
 
 from dagster import (
-    AssetMaterialization,
     In,
     Nothing,
     OpDefinition,
@@ -66,7 +63,7 @@ def meltano_run_op(command: str) -> OpDefinition:
 
 @op(
     name=generate_dagster_name("meltano install"),
-    description=f"Install all Meltano plugins",
+    description="Install all Meltano plugins",
     ins={"after": In(Nothing)},
     tags={"kind": "meltano"},
     required_resource_keys={"meltano"},

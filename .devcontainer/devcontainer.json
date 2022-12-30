@@ -19,8 +19,5 @@
     "esbenp.prettier-vscode"
   ],
   "postCreateCommand": "poetry config virtualenvs.in-project true && poetry install && git config --global --add safe.directory /workspaces/dagster-meltano",
-  "remoteUser": "root",
-  "containerEnv": {
-    "MELTANO_PROJECT_ROOT": "/workspaces/dagster-meltano/meltano_project"
-  }
+  "remoteUser": "root"
 }
