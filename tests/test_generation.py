@@ -16,8 +16,8 @@ def test_job_and_schedule_returned():
     assert isinstance(job, JobDefinition)
     assert isinstance(schedule, ScheduleDefinition)
 
-    assert job.name == "load_jobs"
-    assert schedule.name == "daily_load_jobs"
+    assert job.name == "smoke_job"
+    assert schedule.name == "daily_smoke_job"
 
 
 def test_job():

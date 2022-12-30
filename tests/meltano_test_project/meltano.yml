@@ -20,13 +20,13 @@ plugins:
       env:
         MELTANO_LOAD_SCHEMA: TAP_CARBON_INTENSITY
 jobs:
-  - name: load-jobs
+  - name: smoke-job
     tasks:
       - tap-smoke-test target-jsonl
 schedules:
-  - name: daily-load-jobs
+  - name: daily-smoke-job
     interval: "@daily"
-    job: load-jobs
+    job: smoke-job
 environments:
   - name: dev
   - name: staging

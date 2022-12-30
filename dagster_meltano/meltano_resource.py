@@ -1,8 +1,9 @@
 import asyncio
+import os
 from functools import lru_cache
 from typing import Dict, List, Optional
 
-from dagster import resource
+from dagster import resource, Field
 
 from dagster_meltano.job import Job
 from dagster_meltano.log_processing.json_processor import JsonLogProcessor
@@ -22,7 +23,8 @@ class MeltanoResource(metaclass=Singleton):
         self.project_dir = project_dir
         self.meltano_bin = meltano_bin
         self.meltano_invoker = MeltanoInvoker(
-            meltano_bin,
+            bin=meltano_bin,
+            cwd=project_dir,
             log_level="info",  # TODO: Get this from the resource config
         )
 
@@ -64,7 +66,9 @@ class MeltanoResource(metaclass=Singleton):
     @lru_cache
     def meltano_schedules(self) -> List[Schedule]:
         meltano_schedule_list = self.meltano_yaml["schedules"]["job"]
-        schedule_list = [Schedule(meltano_schedule) for meltano_schedule in meltano_schedule_list]
+        schedule_list = [
+            Schedule(meltano_schedule) for meltano_schedule in meltano_schedule_list
+        ]
         return schedule_list
 
     @property
@@ -80,11 +84,19 @@ class MeltanoResource(metaclass=Singleton):
             yield meltano_schedule.dagster_schedule
 
 
-@resource(description="A resource that corresponds to a Meltano project.")
+@resource(
+    description="A resource that corresponds to a Meltano project.",
+    config_schema={
+        "project_dir": Field(
+            str,
+            default_value=os.getenv("MELTANO_PROJECT_ROOT", os.getcwd()),
+            is_required=False,
+        )
+    },
+)
 def meltano_resource(init_context):
-    # project_dir = init_context.resource_config["project_dir"]
-    # return MeltanoResource(project_dir)
-    return MeltanoResource()
+    project_dir = init_context.resource_config["project_dir"]
+    return MeltanoResource(project_dir)
 
 
 if __name__ == "__main__":
