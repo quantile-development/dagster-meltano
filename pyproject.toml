@@ -4,6 +4,7 @@ version = "1.0.0"
 description = "A dagster plugin that allows you to run your Meltano project inside Dagster."
 authors = ["Jules Huisman"]
 license = "Apache 2.0"
+readme = "README.md"
 packages = [
     { include = "dagster_meltano" }
 ]
