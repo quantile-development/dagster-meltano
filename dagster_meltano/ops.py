@@ -1,9 +1,7 @@
 from __future__ import annotations
-from ast import Dict
-
 from functools import lru_cache
-from typing import TYPE_CHECKING, Any, Optional
-
+from typing import TYPE_CHECKING, Any, Dict, Optional
+import json
 from dagster import (
     In,
     Nothing,
@@ -27,7 +25,7 @@ STDOUT = 1
 @lru_cache
 def meltano_run_op(
         command: str,
-        env: dict = {},
+        env: str, #Optional[Dict[str, Any]] = {},
         # env: Optional[Dict[str, Any]] = {},
     ) -> OpDefinition:
     """
@@ -38,9 +36,9 @@ def meltano_run_op(
     """
     dagster_name = generate_dagster_name(command)
     ins = {
-        "after": In(Nothing),
-        "env": In(Optional[dict]),
-    }
+            "after": In(Nothing),
+            # "env": In(Optional[Dict[str, Any]])
+        }
     @op(
         name=dagster_name,
         description=f"Run `{command}` using Meltano.",
@@ -50,11 +48,13 @@ def meltano_run_op(
     )
     def dagster_op(
         context: OpExecutionContext,
-        env: Optional[dict] = {},
+        # env: Optional[Dict[str, Any]] = {},
         ):
         meltano_resource: MeltanoResource = context.resources.meltano
-        meltano_resource.meltano_invoker.env.update(env)
-
+        context.log.warning(env)
+        context.log.warning(meltano_resource.meltano_invoker.env)
+        meltano_resource.meltano_invoker.env.update(json.loads(env))
+        context.log.warning(meltano_resource.meltano_invoker.env)
         log_results = meltano_resource.meltano_invoker.run_and_log(
             "run",
             MetadataLogProcessor,
