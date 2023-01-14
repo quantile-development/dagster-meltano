@@ -1,7 +1,7 @@
 import asyncio
 import os
 from functools import lru_cache
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from dagster import resource, Field
 
@@ -19,13 +19,15 @@ class MeltanoResource(metaclass=Singleton):
         self,
         project_dir: str = None,
         meltano_bin: Optional[str] = "meltano",
+        env: Optional[Dict[str, Any]] = {},
     ):
         self.project_dir = project_dir
         self.meltano_bin = meltano_bin
         self.meltano_invoker = MeltanoInvoker(
             bin=meltano_bin,
             cwd=project_dir,
-            log_level="info",  # TODO: Get this from the resource config
+            log_level="info", # TODO: Get this from the resource config
+            env=env, 
         )
 
     async def load_json_from_cli(self, command: List[str]) -> dict:
