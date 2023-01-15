@@ -39,6 +39,16 @@ def repository():
     return [meltano_run_job]
 ```
 
+You can inject Meltano config with the following Dagster config.
+
+```yaml
+ops:
+  tap_smoke_test_target_jsonl:
+    config:
+      env:
+        TAP_SMOKE_TEST_STREAMS: '[{"stream_name": "new-stream", "input_filename": "demo.json"}]'
+```
+
 ## Development using VSCode
 
 1. Open this repository in Visual Studio Code.
