@@ -25,8 +25,6 @@ STDOUT = 1
 @lru_cache
 def meltano_run_op(
         command: str,
-        env: str, #Optional[Dict[str, Any]] = {},
-        # env: Optional[Dict[str, Any]] = {},
     ) -> OpDefinition:
     """
     Run `meltano run <command>` using a Dagster op.
@@ -37,7 +35,6 @@ def meltano_run_op(
     dagster_name = generate_dagster_name(command)
     ins = {
             "after": In(Nothing),
-            # "env": In(Optional[Dict[str, Any]])
         }
     @op(
         name=dagster_name,
@@ -48,13 +45,13 @@ def meltano_run_op(
     )
     def dagster_op(
         context: OpExecutionContext,
-        # env: Optional[Dict[str, Any]] = {},
         ):
         meltano_resource: MeltanoResource = context.resources.meltano
-        context.log.warning(env)
         context.log.warning(meltano_resource.meltano_invoker.env)
-        meltano_resource.meltano_invoker.env.update(json.loads(env))
-        context.log.warning(meltano_resource.meltano_invoker.env)
+        if context.op_config and "env" in context.op_config:
+            env = context.op_config["env"]
+            meltano_resource.meltano_invoker.env.update(env)
+        context.log.warning(meltano_resource.meltano_invoker.env)            
         log_results = meltano_resource.meltano_invoker.run_and_log(
             "run",
             MetadataLogProcessor,
