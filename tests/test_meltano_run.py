@@ -1,4 +1,6 @@
 import os
+import subprocess
+import pytest
 from dagster import job
 
 from dagster_meltano import meltano_resource, meltano_run_op
@@ -32,7 +34,7 @@ def test_meltano_run():
     assert job_response.success
 
 
-def test_meltano_run_using_env():
+def test_meltano_run_using_env_root():
     """
     Check if we can run abitrary `meltano run` commands, with the project
     root defined using an env variable.
@@ -41,3 +43,32 @@ def test_meltano_run_using_env():
     job_response = meltano_run_job.execute_in_process()
 
     assert job_response.success
+
+
+def test_meltano_run_injecting_env():
+    """
+    Check if we can inject environment variables into the `meltano run` command.
+    We test this by injecting a non existing Meltano environment, which should
+    cause the command to fail.
+    """
+    with pytest.raises(subprocess.CalledProcessError):
+        meltano_run_job.execute_in_process(
+            {
+                "resources": {
+                    "meltano": {
+                        "config": {
+                            "project_dir": MELTANO_PROJECT_TEST_PATH,
+                        },
+                    }
+                },
+                "ops": {
+                    "tap_smoke_test_target_jsonl": {
+                        "config": {
+                            "env": {
+                                "MELTANO_ENVIRONMENT": "non_existing_env",
+                            }
+                        }
+                    }
+                },
+            }
+        )

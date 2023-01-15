@@ -11,7 +11,6 @@ from dagster import get_dagster_logger
 from dagster_meltano.log_processing import LogProcessor
 from dagster_meltano.log_processing.passthrough_processor import PassthroughLogProcessor
 
-# log = structlog.get_logger()
 log = get_dagster_logger()
 
 
