@@ -9,6 +9,7 @@ from dagster import (
     OpExecutionContext,
     get_dagster_logger,
     op,
+    Field,
 )
 
 from dagster_meltano.log_processing.metadata_processor import MetadataLogProcessor
@@ -24,8 +25,8 @@ STDOUT = 1
 
 @lru_cache
 def meltano_run_op(
-        command: str,
-    ) -> OpDefinition:
+    command: str,
+) -> OpDefinition:
     """
     Run `meltano run <command>` using a Dagster op.
 
@@ -34,39 +35,43 @@ def meltano_run_op(
     """
     dagster_name = generate_dagster_name(command)
     ins = {
-            "after": In(Nothing),
-        }
+        "after": In(Nothing),
+    }
+
     @op(
         name=dagster_name,
         description=f"Run `{command}` using Meltano.",
         ins=ins,
         tags={"kind": "meltano"},
         required_resource_keys={"meltano"},
+        config_schema={
+            "env": Field(
+                dict,
+                description="Environment variables to inject into the Meltano run process.",
+                default_value={},
+                is_required=False,
+            )
+        },
     )
-    def dagster_op(
-        context: OpExecutionContext,
-        ):
+    def dagster_op(context: OpExecutionContext):
+        """
+        Run `meltano run <command>` using a Dagster op.
+
+        Args:
+            context (OpExecutionContext): The Dagster op execution context.
+        """
         meltano_resource: MeltanoResource = context.resources.meltano
-        context.log.warning(meltano_resource.meltano_invoker.env)
-        if context.op_config and "env" in context.op_config:
-            env = context.op_config["env"]
-            meltano_resource.meltano_invoker.env.update(env)
-        context.log.warning(meltano_resource.meltano_invoker.env)            
-        log_results = meltano_resource.meltano_invoker.run_and_log(
+
+        # Get the environment variables from the config and
+        # add them to the Meltano invoker
+        env = context.op_config.get("env")
+        meltano_resource.meltano_invoker.env.update(env)
+
+        _log_results = meltano_resource.meltano_invoker.run_and_log(
             "run",
             MetadataLogProcessor,
             command.split(),
         )
-        # dagster_logger.info(log_results[STDOUT])
-
-        # yield AssetMaterialization(
-        #     asset_key="my_dataset",
-        #     metadata={
-        #         "my_text_label": "hello",
-        #         "dashboard_url": MetadataValue.url("http://mycoolsite.com/my_dashboard"),
-        #         "num_rows": 0,
-        #     },
-        # )
 
     return dagster_op
 
