@@ -23,7 +23,7 @@ def repository():
     return [meltano_jobs]
 ```
 
-An example of running a abitrary `meltano run` command.
+An example of running an abitrary `meltano run` command.
 
 ```python
 from dagster import repository, job
