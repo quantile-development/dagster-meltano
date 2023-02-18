@@ -29,7 +29,9 @@ def test_job():
     job_response = job.execute_in_process()
 
     assert job_response.success
-    assert job_response.output_for_node("tap_smoke_test_target_jsonl") == None
+    assert (
+        type(job_response.output_for_node("tap_smoke_test_target_jsonl", "logs")) == str
+    )
 
 
 def test_schedule():
