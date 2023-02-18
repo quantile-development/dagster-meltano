@@ -5,4 +5,4 @@ from dagster_meltano.generation import (
     load_jobs_from_meltano_project,
 )
 from dagster_meltano.meltano_resource import MeltanoResource, meltano_resource
-from dagster_meltano.ops import meltano_install_op, meltano_run_op
+from dagster_meltano.ops import meltano_command_op, meltano_install_op, meltano_run_op

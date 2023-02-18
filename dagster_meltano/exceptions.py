@@ -1,0 +1,2 @@
+class MeltanoCommandError(Exception):
+    pass

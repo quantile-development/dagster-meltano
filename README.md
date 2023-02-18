@@ -49,6 +49,21 @@ ops:
         TAP_SMOKE_TEST_STREAMS: '[{"stream_name": "new-stream", "input_filename": "demo.json"}]'
 ```
 
+An example of running an arbitrary Meltano command.
+
+```python
+from dagster import repository, job
+from dagster_meltano import meltano_resource, meltano_command_op
+
+@job(resource_defs={"meltano": meltano_resource})
+def meltano_command_job():
+    meltano_command_op("install loader tap-smoke-test")()
+
+@repository()
+def repository():
+    return [meltano_command_job]
+```
+
 ## Development using VSCode
 
 1. Open this repository in Visual Studio Code.
