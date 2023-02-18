@@ -1,11 +1,13 @@
 import os
 import subprocess
 import pytest
-from dagster import job
+from dagster import job, op
 
 from dagster_meltano import meltano_resource, meltano_run_op
 
 from pathlib import Path
+
+from dagster_meltano.exceptions import MeltanoCommandError
 
 MELTANO_PROJECT_TEST_PATH = str(Path(__file__).parent / "meltano_test_project")
 
@@ -13,6 +15,16 @@ MELTANO_PROJECT_TEST_PATH = str(Path(__file__).parent / "meltano_test_project")
 @job(resource_defs={"meltano": meltano_resource})
 def meltano_run_job():
     meltano_run_op("tap-smoke-test target-jsonl")()
+
+
+@job(resource_defs={"meltano": meltano_resource})
+def meltano_run_job_with_env_op():
+    @op
+    def inject_env():
+        return {"MELTANO_ENVIRONMENT": "non_existing_env"}
+
+    injected_env = inject_env()
+    meltano_run_op("tap-smoke-test target-jsonl")(env=injected_env)
 
 
 def test_meltano_run():
@@ -51,7 +63,7 @@ def test_meltano_run_injecting_env():
     We test this by injecting a non existing Meltano environment, which should
     cause the command to fail.
     """
-    with pytest.raises(subprocess.CalledProcessError):
+    with pytest.raises(MeltanoCommandError):
         meltano_run_job.execute_in_process(
             {
                 "resources": {
@@ -68,6 +80,55 @@ def test_meltano_run_injecting_env():
                                 "MELTANO_ENVIRONMENT": "non_existing_env",
                             }
                         }
+                    }
+                },
+            }
+        )
+
+
+def test_meltano_run_injecting_env_input():
+    """
+    Check if we can inject environment variables from the op input into the `meltano run` command.
+    We test this by injecting a non existing Meltano environment, which should
+    cause the command to fail.
+    """
+    with pytest.raises(MeltanoCommandError):
+        meltano_run_job.execute_in_process(
+            {
+                "resources": {
+                    "meltano": {
+                        "config": {
+                            "project_dir": MELTANO_PROJECT_TEST_PATH,
+                        },
+                    }
+                },
+                "ops": {
+                    "tap_smoke_test_target_jsonl": {
+                        "inputs": {
+                            "env": {
+                                "MELTANO_ENVIRONMENT": "non_existing_env",
+                            }
+                        }
+                    }
+                },
+            }
+        )
+
+
+def test_meltano_run_injecting_env_using_op():
+    """
+    Check if we can inject environment variables from an op into the `meltano run` command.
+    We test this by injecting a non existing Meltano environment, which should
+    cause the command to fail.
+    """
+    with pytest.raises(MeltanoCommandError):
+        meltano_run_job_with_env_op.execute_in_process(
+            {
+                "resources": {
+                    "meltano": {
+                        "config": {
+                            "project_dir": MELTANO_PROJECT_TEST_PATH,
+                        },
                     }
                 },
             }

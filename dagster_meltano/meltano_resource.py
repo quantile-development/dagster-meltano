@@ -1,42 +1,101 @@
 import asyncio
+import json
+import logging
 import os
-from functools import lru_cache
-from typing import Any, Dict, List, Optional
+from functools import cached_property, lru_cache
+from pathlib import Path
+from typing import Dict, List, Optional, Union
 
-from dagster import resource, Field
+from dagster import DagsterLogManager, resource, Field
+from dagster_meltano.exceptions import MeltanoCommandError
 
 from dagster_meltano.job import Job
-from dagster_meltano.log_processing.json_processor import JsonLogProcessor
-from dagster_meltano.meltano_invoker import MeltanoInvoker
 from dagster_meltano.schedule import Schedule
 from dagster_meltano.utils import Singleton
+from dagster_shell import execute_shell_command
 
 STDOUT = 1
 
 
 class MeltanoResource(metaclass=Singleton):
-    def __init__(
-        self,
-        project_dir: str = None,
-        meltano_bin: Optional[str] = "meltano",
-        env: Optional[Dict[str, Any]] = {},
-    ):
-        self.project_dir = project_dir
+    def __init__(self, project_dir: str = None, meltano_bin: Optional[str] = "meltano"):
+        self.project_dir = str(project_dir)
         self.meltano_bin = meltano_bin
-        self.meltano_invoker = MeltanoInvoker(
-            bin=meltano_bin,
-            cwd=project_dir,
-            log_level="info", # TODO: Get this from the resource config
-            env=env, 
+
+    @property
+    def default_env(self) -> Dict[str, str]:
+        """The default environment to use when running Meltano commands.
+
+        Returns:
+            Dict[str, str]: The environment variables.
+        """
+        return {
+            **os.environ.copy(),
+            "MELTANO_CLI_LOG_CONFIG": Path(__file__).parent / "logging.yaml",
+            "DBT_USE_COLORS": "false",
+            "NO_COLOR": "1",
+        }
+
+    def execute_command(
+        self,
+        command: str,
+        env: Dict[str, str],
+        logger: Union[logging.Logger, DagsterLogManager] = logging.Logger,
+    ) -> str:
+        """Execute a Meltano command.
+
+        Args:
+            context (OpExecutionContext): The Dagster execution context.
+            command (str): The Meltano command to execute.
+            env (Dict[str, str]): The environment variables to inject when executing the command.
+
+        Returns:
+            str: The output of the command.
+        """
+        output, exit_code = execute_shell_command(
+            f"meltano {command}",
+            env={**self.default_env, **env},
+            output_logging="STREAM",
+            log=logger,
+            cwd=self.project_dir,
         )
 
+        if exit_code != 0:
+            raise MeltanoCommandError(
+                f"Command '{command}' failed with exit code {exit_code}"
+            )
+
+        print(output)
+
+        return output
+
     async def load_json_from_cli(self, command: List[str]) -> dict:
-        _, log_results = await self.meltano_invoker.exec(
-            None,
-            JsonLogProcessor,
-            command,
+        """Use the Meltano CLI to load JSON data.
+        Use asyncio to run multiple commands concurrently.
+
+        Args:
+            command (List[str]): The Meltano command to execute.
+
+        Returns:
+            dict: The processed JSON data.
+        """
+        # Create the subprocess, redirect the standard output into a pipe
+        proc = await asyncio.create_subprocess_exec(
+            "meltano",
+            *command,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+            cwd=self.project_dir,
         )
-        return log_results[STDOUT]
+
+        # Wait for the subprocess to finish
+        stdout, stderr = await proc.communicate()
+
+        # Try to load the output as JSON
+        try:
+            return json.loads(stdout)
+        except json.decoder.JSONDecodeError:
+            raise ValueError(f"Could not process json: {stdout} {stderr}")
 
     async def gather_meltano_yaml_information(self):
         jobs, schedules = await asyncio.gather(
@@ -46,26 +105,22 @@ class MeltanoResource(metaclass=Singleton):
 
         return jobs, schedules
 
-    @property
-    @lru_cache
-    def meltano_yaml(self):
+    @cached_property
+    def meltano_yaml(self) -> dict:
+        """Asynchronously load the Meltano jobs and schedules.
+
+        Returns:
+            dict: The Meltano jobs and schedules.
+        """
         jobs, schedules = asyncio.run(self.gather_meltano_yaml_information())
         return {"jobs": jobs["jobs"], "schedules": schedules["schedules"]}
 
-    @property
-    @lru_cache
+    @cached_property
     def meltano_jobs(self) -> List[Job]:
         meltano_job_list = self.meltano_yaml["jobs"]
-        return [
-            Job(
-                meltano_job,
-                self.meltano_invoker,
-            )
-            for meltano_job in meltano_job_list
-        ]
+        return [Job(meltano_job) for meltano_job in meltano_job_list]
 
-    @property
-    @lru_cache
+    @cached_property
     def meltano_schedules(self) -> List[Schedule]:
         meltano_schedule_list = self.meltano_yaml["schedules"]["job"]
         schedule_list = [

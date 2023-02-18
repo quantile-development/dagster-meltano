@@ -20,7 +20,7 @@ handlers:
   console:
     class: logging.StreamHandler
     level: INFO
-    formatter: json
+    formatter: default
     stream: "ext://sys.stderr"
 
 root:

@@ -24,6 +24,7 @@ plugins:
 jobs:
   - name: load-jobs
     tasks:
+      - dagster
       - tap-smoke-test target-jsonl
 schedules:
   - name: daily-load-jobs
