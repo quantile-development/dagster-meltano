@@ -31,7 +31,7 @@ class MeltanoResource(metaclass=Singleton):
         """
         return {
             **os.environ.copy(),
-            "MELTANO_CLI_LOG_CONFIG": Path(__file__).parent / "logging.yaml",
+            "MELTANO_CLI_LOG_CONFIG": str(Path(__file__).parent / "logging.yaml"),
             "DBT_USE_COLORS": "false",
             "NO_COLOR": "1",
         }
