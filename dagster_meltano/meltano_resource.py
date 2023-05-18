@@ -18,9 +18,15 @@ STDOUT = 1
 
 
 class MeltanoResource(metaclass=Singleton):
-    def __init__(self, project_dir: str = None, meltano_bin: Optional[str] = "meltano"):
+    def __init__(
+        self,
+        project_dir: str = None,
+        meltano_bin: Optional[str] = "meltano",
+        retries: int = 0,
+    ):
         self.project_dir = str(project_dir)
         self.meltano_bin = meltano_bin
+        self.retries = retries
 
     @property
     def default_env(self) -> Dict[str, str]:
@@ -64,8 +70,6 @@ class MeltanoResource(metaclass=Singleton):
             raise MeltanoCommandError(
                 f"Command '{command}' failed with exit code {exit_code}"
             )
-
-        print(output)
 
         return output
 
@@ -118,7 +122,13 @@ class MeltanoResource(metaclass=Singleton):
     @cached_property
     def meltano_jobs(self) -> List[Job]:
         meltano_job_list = self.meltano_yaml["jobs"]
-        return [Job(meltano_job) for meltano_job in meltano_job_list]
+        return [
+            Job(
+                meltano_job=meltano_job,
+                retries=self.retries,
+            )
+            for meltano_job in meltano_job_list
+        ]
 
     @cached_property
     def meltano_schedules(self) -> List[Schedule]:
@@ -146,14 +156,26 @@ class MeltanoResource(metaclass=Singleton):
     config_schema={
         "project_dir": Field(
             str,
+            description="The path to the Meltano project.",
             default_value=os.getenv("MELTANO_PROJECT_ROOT", os.getcwd()),
             is_required=False,
-        )
+        ),
+        "retries": Field(
+            int,
+            description="The number of times to retry a failed job.",
+            default_value=0,
+            is_required=False,
+        ),
     },
 )
 def meltano_resource(init_context):
     project_dir = init_context.resource_config["project_dir"]
-    return MeltanoResource(project_dir)
+    retries = init_context.resource_config["retries"]
+
+    return MeltanoResource(
+        project_dir=project_dir,
+        retries=retries,
+    )
 
 
 if __name__ == "__main__":

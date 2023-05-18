@@ -12,6 +12,7 @@ from dagster import (
     get_dagster_logger,
     job,
     op,
+    RetryPolicy,
 )
 
 from dagster_meltano.ops import meltano_run_op as meltano_run_op_factory
@@ -19,9 +20,10 @@ from dagster_meltano.utils import generate_dagster_name
 
 
 class Job:
-    def __init__(self, meltano_job: dict) -> None:
+    def __init__(self, meltano_job: dict, retries: int = 0) -> None:
         self.name = meltano_job["job_name"]
         self.tasks = meltano_job["tasks"]
+        self.retries = retries
 
     @property
     def dagster_name(self) -> str:
@@ -40,6 +42,7 @@ class Job:
             name=self.dagster_name,
             description=f"Runs the `{self.name}` job from Meltano.",
             resource_defs={"meltano": meltano_resource},
+            op_retry_policy=RetryPolicy(max_retries=self.retries),
         )
         def dagster_job():
             op_layers = [[], []]
