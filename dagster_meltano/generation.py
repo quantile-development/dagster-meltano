@@ -11,12 +11,14 @@ from dagster_meltano.utils import generate_dbt_group_name
 
 def load_jobs_from_meltano_project(
     meltano_project_dir: Optional[str],
+    retries: int = 0,
 ) -> List[Union[JobDefinition, ScheduleDefinition]]:
     """This function generates dagster jobs for all jobs defined in the Meltano project. If there are schedules connected
     to the jobs, it also returns those.
 
     Args:
         project_dir (Optional[str], optional): The location of the Meltano project. Defaults to os.getenv("MELTANO_PROJECT_ROOT").
+        retries (int, optional): The number of retries to attempt if the Meltano CLI fails to run. Defaults to 0.
 
     Returns:
         List[Union[JobDefinition, ScheduleDefinition]]: Returns a list of either Dagster JobDefinitions or ScheduleDefinitions
@@ -24,6 +26,7 @@ def load_jobs_from_meltano_project(
     meltano_resource = MeltanoResource(
         project_dir=meltano_project_dir,
         meltano_bin="meltano",
+        retries=retries,
     )
 
     meltano_jobs = meltano_resource.jobs

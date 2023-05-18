@@ -1,3 +1,4 @@
+import re
 from dagster import JobDefinition, ScheduleDefinition
 
 from dagster_meltano import load_jobs_from_meltano_project
@@ -11,7 +12,9 @@ def test_job_and_schedule_returned():
     """
     Check if the generator function correctly returns the jobs and schedules.
     """
-    (job, schedule) = load_jobs_from_meltano_project(MELTANO_PROJECT_TEST_PATH)
+    (job, schedule) = load_jobs_from_meltano_project(
+        MELTANO_PROJECT_TEST_PATH,
+    )
 
     assert isinstance(job, JobDefinition)
     assert isinstance(schedule, ScheduleDefinition)
