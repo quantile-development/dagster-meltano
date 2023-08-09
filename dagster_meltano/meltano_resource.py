@@ -36,10 +36,10 @@ class MeltanoResource(metaclass=Singleton):
             Dict[str, str]: The environment variables.
         """
         return {
-            **os.environ.copy(),
             "MELTANO_CLI_LOG_CONFIG": str(Path(__file__).parent / "logging.yaml"),
             "DBT_USE_COLORS": "false",
             "NO_COLOR": "1",
+            **os.environ.copy(),
         }
 
     def execute_command(
