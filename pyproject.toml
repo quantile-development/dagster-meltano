@@ -1,8 +1,8 @@
 [tool.poetry]
 name = "dagster-meltano"
-version = "1.4.0"
+version = "1.5.0"
 description = "A dagster plugin that allows you to run your Meltano project inside Dagster."
-authors = ["Jules Huisman"]
+authors = ["Quantile Development"]
 license = "Apache 2.0"
 readme = "README.md"
 packages = [
