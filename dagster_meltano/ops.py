@@ -91,8 +91,7 @@ def meltano_command_op(
         env = {**env, **config_env}
 
         # Run the Meltano command
-        output = meltano_resource.execute_command(
-            f"{command}", env, context.log)
+        output = meltano_resource.execute_command(f"{command}", env, context.log)
 
         # Return the logs
         return output
@@ -111,7 +110,9 @@ def meltano_run_op(
     same repository.
     """
     dagster_name = generate_dagster_name(command)
-    return meltano_command_op(command=f"run {command} --force", dagster_name=dagster_name)
+    return meltano_command_op(
+        command=f"run {command} --force", dagster_name=dagster_name
+    )
 
 
 @op(
@@ -129,7 +130,7 @@ def meltano_run_op(
         )
     },
 )
-def meltano_install_op(context: OpExecutionContext):
+def meltano_install_op(context):
     """
     Run `meltano install` using a Dagster op.
     """
