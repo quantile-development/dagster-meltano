@@ -5,7 +5,6 @@ from dagster import (
     In,
     Nothing,
     OpDefinition,
-    OpExecutionContext,
     Out,
     get_dagster_logger,
     op,
@@ -71,14 +70,14 @@ def meltano_command_op(
         },
     )
     def dagster_op(
-        context: OpExecutionContext,
+        context,
         env: Optional[dict],
     ) -> str:
         """
         Run `meltano run <command>` using a Dagster op.
 
         Args:
-            context (OpExecutionContext): The Dagster op execution context.
+            context: The Dagster op execution context.
         """
         meltano_resource: MeltanoResource = context.resources.meltano
 
