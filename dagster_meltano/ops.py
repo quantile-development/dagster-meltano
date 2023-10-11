@@ -24,7 +24,7 @@ STDOUT = 1
 @lru_cache
 def meltano_command_op(
     command: str,
-    dagster_name: Optional[str] = None,
+    dagster_name: str,
 ) -> OpDefinition:
     """
     Run `meltano <command>` using a Dagster op.
@@ -34,13 +34,11 @@ def meltano_command_op(
 
     Args:
         command (str): The Meltano command to run.
-        dagster_name (Optional[str], optional): The Dagster name to use for the op.
-            Defaults to None.
+        dagster_name (str): The Dagster name to use for the op.
 
     Returns:
         OpDefinition: The Dagster op definition.
     """
-    dagster_name = dagster_name or generate_dagster_name(command)
     ins = {
         "after": In(Nothing),
         "env": In(
@@ -101,14 +99,23 @@ def meltano_command_op(
 @lru_cache
 def meltano_run_op(
     command: str,
+    dagster_name: Optional[str] = None, 
+    
 ) -> OpDefinition:
     """
     Run `meltano run <command>` using a Dagster op.
 
     This factory is cached to make sure the same commands can be reused in the
     same repository.
+
+    Args:
+    command (str): The Meltano command to run.
+    dagster_name (Optional[str], optional): The Dagster name to use for the op.
+        Defaults to None.
     """
-    dagster_name = generate_dagster_name(command)
+    # if not set, generate a dagster_name from the command
+    dagster_name = dagster_name or generate_dagster_name(command)
+
     return meltano_command_op(
         command=f"run {command} --force", dagster_name=dagster_name
     )
