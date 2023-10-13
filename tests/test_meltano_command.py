@@ -9,7 +9,7 @@ MELTANO_PROJECT_TEST_PATH = str(Path(__file__).parent / "meltano_test_project")
 
 @job(resource_defs={"meltano": meltano_resource})
 def meltano_command_job():
-    meltano_command_op("install extractor tap-smoke-test")()
+    meltano_command_op("install extractor tap-smoke-test", "custom_job_name")()
 
 
 def test_meltano_command():
