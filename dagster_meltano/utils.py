@@ -16,7 +16,7 @@ def generate_dagster_name(input_string) -> str:
     """
     Generate a dagster safe name (^[A-Za-z0-9_]+$.)
     """
-    return input_string.replace("-", "_").replace(" ", "_").replace(":", "_")
+    return input_string.replace("-", "_").replace(" ", "_").replace(":", "_").replace("=", "_")
 
 
 def generate_dbt_group_name(node_info: dict) -> str:
