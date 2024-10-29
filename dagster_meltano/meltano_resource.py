@@ -59,7 +59,7 @@ class MeltanoResource(metaclass=Singleton):
             str: The output of the command.
         """
         output, exit_code = execute_shell_command(
-            f"meltano {command}",
+            f"{self.meltano_bin} {command}",
             env={**self.default_env, **env},
             output_logging="STREAM",
             log=logger,
@@ -85,7 +85,7 @@ class MeltanoResource(metaclass=Singleton):
         """
         # Create the subprocess, redirect the standard output into a pipe
         proc = await asyncio.create_subprocess_exec(
-            "meltano",
+            self.meltano_bin,
             *command,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
